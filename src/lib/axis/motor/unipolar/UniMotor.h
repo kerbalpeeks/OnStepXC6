@@ -22,6 +22,7 @@
 #ifdef UNI_MOTOR_PRESENT
 
 #include "../Motor.h"
+#include "../../../gpioEx/GpioEx.h"
 
 // Pins describing a single unipolar motor channel
 typedef struct UniPins {
