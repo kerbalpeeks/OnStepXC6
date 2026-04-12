@@ -104,8 +104,8 @@ bool UniMotor::init() {
   pinModeEx(Pins->in3, OUTPUT); digitalWriteEx(Pins->in3, LOW);
   pinModeEx(Pins->in4, OUTPUT); digitalWriteEx(Pins->in4, LOW);
 
-  // optional enable/power pin
-  if (Pins->enable != OFF) {
+  // optional enable/power pin (skip if OFF or SHARED — SHARED is handled by hardware)
+  if (Pins->enable != OFF && Pins->enable != SHARED) {
     pinModeEx(Pins->enable, OUTPUT);
     digitalWriteEx(Pins->enable, !Pins->enabledState); // start disabled
   }
@@ -148,7 +148,7 @@ void UniMotor::enable(bool state) {
     coilsOff();
   }
 
-  if (Pins->enable != OFF) {
+  if (Pins->enable != OFF && Pins->enable != SHARED) {
     digitalWriteEx(Pins->enable, state ? Pins->enabledState : !Pins->enabledState);
   }
 
