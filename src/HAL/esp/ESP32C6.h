@@ -22,11 +22,16 @@
   #error "Configuration (Config.h): ANALOG_WRITE_RANGE can't be changed on this platform"
 #endif
 
-// Analog read/write capabilities
-#define HAL_HAS_PER_PIN_PWM_RESOLUTION 0
-#define HAL_HAS_PER_PIN_PWM_FREQUENCY 0
-#define HAL_HAS_GLOBAL_PWM_RESOLUTION 1
-#define HAL_HAS_GLOBAL_PWM_FREQUENCY 1
+// Analog read/write capabilities.
+// Arduino ESP32 core v3.x removed the global analogWriteResolution(bits) and
+// analogWriteFrequency(freq) overloads; both are now per-pin:
+//   analogWriteResolution(pin, bits)
+//   analogWriteFrequency(pin, freq)
+// Set PER_PIN flags so Analog.cpp takes the correct code path.
+#define HAL_HAS_PER_PIN_PWM_RESOLUTION 1
+#define HAL_HAS_PER_PIN_PWM_FREQUENCY 1
+#define HAL_HAS_GLOBAL_PWM_RESOLUTION 0
+#define HAL_HAS_GLOBAL_PWM_FREQUENCY 0
 #define HAL_PWM_HZ_MAX 200000U
 
 #define HAL_HAS_GLOBAL_ADC_RESOLUTION 1
