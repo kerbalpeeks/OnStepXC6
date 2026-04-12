@@ -78,9 +78,15 @@
 #endif
 
 // I2C (Wire) --------------------------------------------------------------------------------------
-// ESP32-C6 Arduino core defaults: SDA=GPIO6, SCL=GPIO7.
+// Explicitly set SDA/SCL so WIRE_INIT() calls Wire.begin(SDA,SCL) before setClock().
 // These are also AUX3/AUX4 and home-switch pins — choose one role per project.
-// Override by defining I2C_SDA_PIN / I2C_SCL_PIN in Config.h before the pinmap is loaded.
+// Override in Config.h if different pins are needed.
+#ifndef I2C_SDA_PIN
+  #define I2C_SDA_PIN             6
+#endif
+#ifndef I2C_SCL_PIN
+  #define I2C_SCL_PIN             7
+#endif
 
 // Multi-purpose auxiliary pins --------------------------------------------------------------------
 #define AUX2_PIN                2    // SPI MISO / TMC UART RX (shared input)
