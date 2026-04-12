@@ -91,6 +91,10 @@
   #define PINMAP_STR "SAL-XB1"
   #include "Pins.SAL_XB1.h"
 #endif
+#if PINMAP == ESP32C6Supermini
+  #define PINMAP_STR "ESP32-C6 Supermini"
+  #include "Pins.ESP32C6Supermini.h"
+#endif
 #ifndef PINMAP_STR
   #define PINMAP_STR "Unknown"
 #endif

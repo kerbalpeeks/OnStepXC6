@@ -53,6 +53,11 @@
   #define MCU_STR "ARDUINO M0"
   #include "arduinoM0/ArduinoM0.h"
 
+#elif defined(CONFIG_IDF_TARGET_ESP32C6) && ESP_ARDUINO_VERSION >= 0x30000
+  // ESP32-C6 (RISC-V) w/libraries 3.x
+  #define MCU_STR "ESP32-C6"
+  #include "esp/ESP32C6.h"
+
 #elif defined(ESP32) && ESP_ARDUINO_VERSION >= 0x30000
   // ESP32 w/libraries 3.x
   #define MCU_STR "ESP32"
