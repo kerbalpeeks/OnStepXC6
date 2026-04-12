@@ -42,7 +42,9 @@
 
 #define SAL_XB1                     24     // SAL-XB1 telescope mount controller
 
-#define PINMAP_LAST                 24
+#define ESP32C6Supermini            25     // ESP32-C6 Supermini bare board (RISC-V, Arduino ESP32 core v3.x)
+
+#define PINMAP_LAST                 25
 
 // WEATHER sensors (temperature, pressure, and humidity)
 #define WEATHER_FIRST               1
