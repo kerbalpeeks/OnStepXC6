@@ -193,6 +193,20 @@
 //   #define ST4_DEC_N_PIN 22  (if SPI/UART TMC unused on Axis1)
 //   #define ST4_RA_E_PIN  23  (if SPI/UART TMC unused on Axis2)
 
+// ULN2003 unipolar motor driver (28BYJ-48) --------------------------------------------------------
+// When AXIS1_DRIVER_MODEL ULN2003 / AXIS2_DRIVER_MODEL ULN2003 is set, define the four coil
+// output pins in Config.h.  Suggested assignments (no conflicts unless SPI/TMC-UART also in use):
+//
+//   Axis1 (RA / Azimuth)              Axis2 (Dec / Altitude)
+//   ─────────────────────             ──────────────────────
+//   #define AXIS1_IN1_PIN  4          #define AXIS2_IN1_PIN  18
+//   #define AXIS1_IN2_PIN  5          #define AXIS2_IN2_PIN  19
+//   #define AXIS1_IN3_PIN  22         #define AXIS2_IN3_PIN  23
+//   #define AXIS1_IN4_PIN  11         #define AXIS2_IN4_PIN  15
+//
+// Power: ULN2003 board 5 V from board VIN/5V rail; IN1..IN4 accept 3.3 V logic directly.
+// AXIS1_ENABLE_PIN / AXIS2_ENABLE_PIN → SHARED (hardware enable) or OFF (always energised).
+
 #else
   #error "Wrong processor for this configuration!"
 #endif

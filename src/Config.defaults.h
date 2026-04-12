@@ -396,6 +396,28 @@
   #define AXIS1_MKS42D_PRESENT
 #endif
 
+#if AXIS1_DRIVER_MODEL >= UNI_DRIVER_FIRST && AXIS1_DRIVER_MODEL <= UNI_DRIVER_LAST
+  #define AXIS1_UNI_PRESENT
+  #ifndef AXIS1_DRIVER_MICROSTEPS
+  #define AXIS1_DRIVER_MICROSTEPS       2                           // 2 = half-step (default), 1 = full-step
+  #endif
+  #ifndef AXIS1_DRIVER_STATUS
+  #define AXIS1_DRIVER_STATUS           OFF
+  #endif
+  #ifndef AXIS1_IN1_PIN
+  #define AXIS1_IN1_PIN                 OFF
+  #endif
+  #ifndef AXIS1_IN2_PIN
+  #define AXIS1_IN2_PIN                 OFF
+  #endif
+  #ifndef AXIS1_IN3_PIN
+  #define AXIS1_IN3_PIN                 OFF
+  #endif
+  #ifndef AXIS1_IN4_PIN
+  #define AXIS1_IN4_PIN                 OFF
+  #endif
+#endif
+
 #ifndef AXIS2_DRIVER_MODEL
 #define AXIS2_DRIVER_MODEL            OFF                         // specify a driver to enable
 #endif
@@ -567,6 +589,28 @@
 
 #if AXIS2_DRIVER_MODEL == MKS42D
   #define AXIS2_MKS42D_PRESENT
+#endif
+
+#if AXIS2_DRIVER_MODEL >= UNI_DRIVER_FIRST && AXIS2_DRIVER_MODEL <= UNI_DRIVER_LAST
+  #define AXIS2_UNI_PRESENT
+  #ifndef AXIS2_DRIVER_MICROSTEPS
+  #define AXIS2_DRIVER_MICROSTEPS       2                           // 2 = half-step (default), 1 = full-step
+  #endif
+  #ifndef AXIS2_DRIVER_STATUS
+  #define AXIS2_DRIVER_STATUS           OFF
+  #endif
+  #ifndef AXIS2_IN1_PIN
+  #define AXIS2_IN1_PIN                 OFF
+  #endif
+  #ifndef AXIS2_IN2_PIN
+  #define AXIS2_IN2_PIN                 OFF
+  #endif
+  #ifndef AXIS2_IN3_PIN
+  #define AXIS2_IN3_PIN                 OFF
+  #endif
+  #ifndef AXIS2_IN4_PIN
+  #define AXIS2_IN4_PIN                 OFF
+  #endif
 #endif
 
 // decode internal mount type, tangent arm, azm wrap
@@ -2175,8 +2219,13 @@
   #define MKS42D_MOTOR_PRESENT
 #endif
 
+// flag presence of unipolar motors
+#if defined(AXIS1_UNI_PRESENT) || defined(AXIS2_UNI_PRESENT)
+  #define UNI_MOTOR_PRESENT
+#endif
+
 // flag to indicate if any motor is present
-#if defined(SERVO_MOTOR_PRESENT) || defined(STEP_DIR_MOTOR_PRESENT) || defined(ODRIVE_MOTOR_PRESENT) || defined(KTECH_MOTOR_PRESENT)
+#if defined(SERVO_MOTOR_PRESENT) || defined(STEP_DIR_MOTOR_PRESENT) || defined(ODRIVE_MOTOR_PRESENT) || defined(KTECH_MOTOR_PRESENT) || defined(UNI_MOTOR_PRESENT)
   #define MOTOR_PRESENT
 #endif
 
