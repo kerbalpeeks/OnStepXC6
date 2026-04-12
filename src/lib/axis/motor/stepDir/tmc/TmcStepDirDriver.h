@@ -21,7 +21,11 @@
 #endif
 
 #if SERIAL_TMC == SoftSerial
-  #include <SoftwareSerial.h> // must be built into the board libraries
+  #if !defined(ESP32) && !defined(ESP8266)
+    #include <SoftwareSerial.h> // must be built into the board libraries
+  #endif
+  // ESP32/ESP8266: no SoftwareSerial; use HardwareSerial with remappable pins.
+  // Define SERIAL_TMC to a HardwareSerial instance when using TMC UART drivers.
 #endif
 
 class TmcStepDirDriver : public StepDirDriver {
