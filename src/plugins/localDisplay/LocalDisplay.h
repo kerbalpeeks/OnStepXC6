@@ -12,12 +12,14 @@
 // Required Arduino libraries: U8g2 (by olikraus, install via Library Manager).
 //
 // Recommended encoder pin assignment for ESP32-C6 Supermini:
-//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column — well clear of motor groups
+//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column — clear of both motor groups
 //   #define LOCAL_DISPLAY_ENCODER_DT_PIN    9   // right column
-//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN  21   // bottom-right pin (GPIO8=RGB LED — avoid)
-// GPIO0/GPIO1 — adjacent to Axis2 motor pins (GPIO2-5) — do NOT use for encoder.
-// GPIO8  — onboard RGB LED peripheral; using as INPUT_PULLUP lights the LED — avoid.
-// GPIO12/13 — USB D±; leave unconnected when USB-CDC serial is active — avoid.
+//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // left column — 20ms debounce filters motor EMI
+// CLK/DT must be far from motor coil pins for quadrature precision.
+// BTN only needs a sustained 20ms LOW, so GPIO1 (adjacent to Axis2 motors GPIO2-5) is fine.
+// GPIO8  — onboard RGB LED; INPUT_PULLUP lights the LED — avoid for BTN.
+// GPIO12/13 — USB D±; avoid while USB-CDC is active.
+// GPIO21/22/23 — not on the accessible breadboard header row — avoid.
 #pragma once
 
 #include "../../Common.h"
@@ -73,6 +75,12 @@ class LocalDisplay {
     int8_t      _barPos     = 0;
     int8_t      _barDir     = 1;
     bool        _ready      = false;
+
+    // ---- Cached RTC time (read from DS3231 once per poll, used by drawHeader) ----
+    uint8_t     _rtcH       = 0;
+    uint8_t     _rtcM       = 0;
+    uint8_t     _rtcS       = 0;
+    bool        _rtcValid   = false;
 
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta     = 0;
