@@ -12,10 +12,12 @@
 // Required Arduino libraries: U8g2 (by olikraus, install via Library Manager).
 //
 // Recommended encoder pin assignment for ESP32-C6 Supermini:
-//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column — 3 consecutive pins,
-//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    9   // away from both motor groups
-//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   8   // (GPIO8 = RGB LED, will be inactive)
-// GPIO0/GPIO1 are adjacent to Axis2 motor pins (GPIO2-5) — do NOT use for encoder.
+//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column — well clear of motor groups
+//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    9   // right column
+//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN  21   // bottom-right pin (GPIO8=RGB LED — avoid)
+// GPIO0/GPIO1 — adjacent to Axis2 motor pins (GPIO2-5) — do NOT use for encoder.
+// GPIO8  — onboard RGB LED peripheral; using as INPUT_PULLUP lights the LED — avoid.
+// GPIO12/13 — USB D±; leave unconnected when USB-CDC serial is active — avoid.
 #pragma once
 
 #include "../../Common.h"
@@ -75,7 +77,8 @@ class LocalDisplay {
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta     = 0;
     uint8_t       _lastClkState = HIGH;  // previous CLK level for edge detection
-    uint8_t       _clkConfirm   = 0;     // consecutive LOW samples needed to confirm edge
+    uint8_t       _clkConfirm   = 0;     // set to 1 on first LOW; step registered on second
+    uint8_t       _clkDirSample = 0;     // DT level captured at the CLK falling edge
 
     // ---- Button state ----
     uint32_t _btnPressTime = 0;
