@@ -2507,3 +2507,27 @@
 #define THERMISTOR2_RSERIES           4700                        // series resistor value (Ohms)
 #endif
 
+// -------------------------------------------------------------------------------------------------
+// LOCAL DISPLAY — SSD1306 128×64 OLED + KY-040 rotary encoder
+// Set LOCAL_DISPLAY ON in Config.h to enable.  All three encoder pins must also be set.
+
+#ifndef LOCAL_DISPLAY
+  #define LOCAL_DISPLAY                   OFF
+#endif
+#ifndef LOCAL_DISPLAY_ENCODER_CLK_PIN
+  #define LOCAL_DISPLAY_ENCODER_CLK_PIN   OFF
+#endif
+#ifndef LOCAL_DISPLAY_ENCODER_DT_PIN
+  #define LOCAL_DISPLAY_ENCODER_DT_PIN    OFF
+#endif
+#ifndef LOCAL_DISPLAY_ENCODER_BTN_PIN
+  #define LOCAL_DISPLAY_ENCODER_BTN_PIN   OFF
+#endif
+#ifndef LOCAL_DISPLAY_POLL_MS
+  #define LOCAL_DISPLAY_POLL_MS           100   // display refresh / encoder poll interval (ms)
+#endif
+
+#if LOCAL_DISPLAY == ON
+  #define LOCAL_DISPLAY_PRESENT
+#endif
+

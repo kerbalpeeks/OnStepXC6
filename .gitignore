@@ -9,5 +9,7 @@ Release/*
 debug.cfg
 esp32.svd
 src/plugins/*
+!src/plugins/localDisplay
+!src/plugins/localDisplay/**
 debug.svd
 z.*
