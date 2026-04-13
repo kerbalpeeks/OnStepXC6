@@ -1,5 +1,6 @@
 .vscode/settings.json
 *.json
+Secrets.h
 __vm/*
 *.vcxproj*
 .vs/*

@@ -2,6 +2,16 @@
 // controller settings
 #pragma once
 
+// -------------------------------------------------------------------------------------------------
+// Optional secrets file — keeps WiFi credentials out of version control.
+// Copy Secrets.h.example (sketch root) → Secrets.h, fill in your values.
+// Secrets.h is git-ignored so it is never committed.
+// Macros defined there (STA_SSID, STA_PASSWORD, AP_PASSWORD, …) take precedence
+// over the placeholder defaults in lib/wifi/WifiManager.defaults.h.
+#if __has_include("../Secrets.h")
+  #include "../Secrets.h"
+#endif
+
 // host name for this microcontroller, by default used for the following if enabled/supported:
 // PRODUCT_DESCRIPTION    the user friendly name for this device, appears on websites etc.
 // HOST_NAME              the name ESP WiFi provides to any DHCP server (Ethernet doesn't support this)

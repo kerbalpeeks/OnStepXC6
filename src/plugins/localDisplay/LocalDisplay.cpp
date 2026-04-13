@@ -61,14 +61,18 @@ void LocalDisplay::pollEncoder() {
   if (!_ready) return;
 
   // --- Rotary encoder: falling edge of CLK with 2-sample noise filter ---
-  // Require CLK to be LOW on two consecutive 10ms polls before registering
-  // a step, to reject motor-switching noise on adjacent GPIO pins.
+  // DT is sampled IMMEDIATELY when CLK first falls — this is the only moment
+  // the two signals are in the correct phase relationship for direction sensing.
+  // A second consecutive LOW poll then confirms the edge is genuine (not a
+  // sub-10ms noise spike), before the step is registered.
   uint8_t clk = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
   if (clk == LOW && _lastClkState == HIGH) {
-    _clkConfirm = 1;                      // CLK just fell — start confirmation
+    // CLK just fell — capture DT immediately while phases are still valid
+    _clkDirSample = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN);
+    _clkConfirm   = 1;
   } else if (clk == LOW && _clkConfirm == 1) {
-    uint8_t dt = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN);
-    if (dt == HIGH) _encDelta++; else _encDelta--;
+    // Second consecutive LOW — edge is real; use direction sampled at t=0
+    if (_clkDirSample == HIGH) _encDelta++; else _encDelta--;
     _clkConfirm = 0;
   } else if (clk == HIGH) {
     _clkConfirm = 0;                      // CLK returned HIGH — reset
