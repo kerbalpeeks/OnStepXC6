@@ -60,12 +60,18 @@ void ldEncoderWrapper() { localDisplay.pollEncoder(); }
 void LocalDisplay::pollEncoder() {
   if (!_ready) return;
 
-  // --- Rotary encoder: detect falling edge of CLK ---
+  // --- Rotary encoder: falling edge of CLK with 2-sample noise filter ---
+  // Require CLK to be LOW on two consecutive 10ms polls before registering
+  // a step, to reject motor-switching noise on adjacent GPIO pins.
   uint8_t clk = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
   if (clk == LOW && _lastClkState == HIGH) {
-    // CLK just fell — DT determines direction
+    _clkConfirm = 1;                      // CLK just fell — start confirmation
+  } else if (clk == LOW && _clkConfirm == 1) {
     uint8_t dt = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN);
     if (dt == HIGH) _encDelta++; else _encDelta--;
+    _clkConfirm = 0;
+  } else if (clk == HIGH) {
+    _clkConfirm = 0;                      // CLK returned HIGH — reset
   }
   _lastClkState = clk;
 
