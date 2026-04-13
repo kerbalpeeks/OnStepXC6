@@ -10,6 +10,12 @@
 //   #define LOCAL_DISPLAY_POLL_MS          100   // optional, default 100
 //
 // Required Arduino libraries: U8g2 (by olikraus, install via Library Manager).
+//
+// Recommended encoder pin assignment for ESP32-C6 Supermini:
+//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column, free GPIO
+//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    0   // left column, AUX7 (unused here)
+//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // left column, PEC (unused here)
+// GPIO8 (RGB LED) and GPIO9 (BOOT strapping) are intentionally avoided.
 #pragma once
 
 #include "../../Common.h"
