@@ -5,17 +5,17 @@
 // Configured via Config.h:
 //   #define LOCAL_DISPLAY                  ON
 //   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14
-//   #define LOCAL_DISPLAY_ENCODER_DT_PIN   21
-//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN  22
+//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    0
+//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1
 //   #define LOCAL_DISPLAY_POLL_MS          100   // optional, default 100
 //
 // Required Arduino libraries: U8g2 (by olikraus, install via Library Manager).
 //
 // Recommended encoder pin assignment for ESP32-C6 Supermini:
-//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column, free GPIO
-//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    0   // left column, AUX7 (unused here)
-//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // left column, PEC (unused here)
-// GPIO8 (RGB LED) and GPIO9 (BOOT strapping) are intentionally avoided.
+//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column — 3 consecutive pins,
+//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    9   // away from both motor groups
+//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   8   // (GPIO8 = RGB LED, will be inactive)
+// GPIO0/GPIO1 are adjacent to Axis2 motor pins (GPIO2-5) — do NOT use for encoder.
 #pragma once
 
 #include "../../Common.h"
@@ -46,8 +46,11 @@ class LocalDisplay {
     // Call once after telescope.init()
     void init();
 
-    // Called by the task scheduler at LOCAL_DISPLAY_POLL_MS intervals
+    // Called by task scheduler at LOCAL_DISPLAY_POLL_MS — handles display + input
     void poll();
+
+    // Called by fast encoder task every 10ms — samples CLK/DT/button
+    void pollEncoder();
 
   private:
     // ---- Drawing helpers ----
@@ -57,31 +60,38 @@ class LocalDisplay {
     void drawStub(const char *label);
 
     // ---- Action ----
-    // Compute coordinates for target[idx] and issue GoTo
     void goToTarget(uint8_t idx);
 
-    // ---- State ----
-    LdScreen _screen     = SCR_MAIN_MENU;
-    uint8_t  _menuSel    = 0;       // cursor in current menu
-    uint8_t  _targetIdx  = 0;       // which object we're pointing at
-    bool     _wasSlewing = false;   // rising-edge detection for slew completion
-    const char *_stubTitle = "";    // title to show on stub screen
+    // ---- Display state ----
+    LdScreen    _screen     = SCR_MAIN_MENU;
+    uint8_t     _menuSel    = 0;
+    uint8_t     _targetIdx  = 0;
+    bool        _wasSlewing = false;
+    const char *_stubTitle  = "";
+    int8_t      _barPos     = 0;
+    int8_t      _barDir     = 1;
+    bool        _ready      = false;
 
-    // Indeterminate slew-bar animation
-    int8_t _barPos = 0;
-    int8_t _barDir = 1;
+    // ---- Encoder polling state (written by pollEncoder, read by poll) ----
+    volatile int  _encDelta     = 0;
+    uint8_t       _lastClkState = HIGH;  // previous CLK level for edge detection
+    uint8_t       _clkConfirm   = 0;     // consecutive LOW samples needed to confirm edge
 
-    bool _ready = false;
+    // ---- Button state ----
+    uint32_t _btnPressTime = 0;
+    bool     _btnHeld      = false;
+    volatile bool _btnShort = false;
+    volatile bool _btnLong  = false;
 
-    // ---- Encoder state (managed by ISR + poll) ----
-    // Exposed as volatile so ISR can write
+    static constexpr uint16_t BTN_DEBOUNCE_MS   = 20;
+    static constexpr uint16_t BTN_LONG_PRESS_MS = 600;
 };
 
 // Single global instance
 extern LocalDisplay localDisplay;
 
-// Free functions (file-scope, called by attachInterrupt and tasks.add)
-void IRAM_ATTR ldEncoderClkISR();
+// Task wrapper functions
 void ldPollWrapper();
+void ldEncoderWrapper();
 
 #endif // LOCAL_DISPLAY_PRESENT
