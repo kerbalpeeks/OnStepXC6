@@ -14,10 +14,10 @@
 
 // =================================================================================================================================
 // CONTROLLER ======================================================================================================================
-#define HOST_NAME                "OnStepC6" // nStep", Hostname for this device up to 16 chars.                                 Adjust
+//#define HOST_NAME                "OnStepC6" // nStep", Hostname for this device up to 16 chars.                                 Adjust
 
 // PINMAP ------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#PINMAP
-#define PINMAP                        OFF //    OFF, Choose from: MiniPCB, MiniPCB2, MaxPCB4, MaxESP4, MaxSTM3, FYSETC_E4,   <-Req'd
+#define PINMAP           ESP32C6Supermini //    OFF, Choose from: MiniPCB, MiniPCB2, MaxPCB4, MaxESP4, MaxSTM3, FYSETC_E4,   <-Req'd
                                           //         BTT_SKR_PRO, etc.  Other boards and more info. in ~/src/Constants.h
 
 // SERIAL PORT COMMAND CHANNELS --------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#SERIAL_PORTS
@@ -29,8 +29,6 @@
 #define SERIAL_E_BAUD_DEFAULT         OFF //    OFF, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
 #define SERIAL_RADIO         WIFI_STATION //    OFF, Use BLUETOOTH or WIFI_ACCESS_POINT or WIFI_STATION (ESP32 only.)         Option
 
-#define STA_SSID                "PeekaWebz"
-#define STA_PASSWORD            "Croute, Pierre"
 #define STA_DHCP_ENABLED        true
 
 
@@ -401,8 +399,8 @@
 //display & encoder
 #define LOCAL_DISPLAY                  ON
 #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14
-#define LOCAL_DISPLAY_ENCODER_DT_PIN    0
-#define LOCAL_DISPLAY_ENCODER_BTN_PIN   1
+#define LOCAL_DISPLAY_ENCODER_DT_PIN    9
+#define LOCAL_DISPLAY_ENCODER_BTN_PIN   8
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------
