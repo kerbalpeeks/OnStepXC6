@@ -76,12 +76,6 @@ class LocalDisplay {
     int8_t      _barDir     = 1;
     bool        _ready      = false;
 
-    // ---- Cached RTC time (read from DS3231 once per poll, used by drawHeader) ----
-    uint8_t     _rtcH       = 0;
-    uint8_t     _rtcM       = 0;
-    uint8_t     _rtcS       = 0;
-    bool        _rtcValid   = false;
-
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta     = 0;
     uint8_t       _lastClkState = HIGH;  // previous CLK level for edge detection

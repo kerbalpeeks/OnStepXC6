@@ -115,14 +115,10 @@ static bool _consumeLong (volatile bool &flag) { bool v = flag; flag = false; re
 
 // ---------------------------------------------------------------------------
 // drawHeader — title left, HH:MM:SS right, separator below
-// Uses _rtcH/_rtcM/_rtcS cached by poll() from the DS3231 each 100ms cycle.
 
 void LocalDisplay::drawHeader(const char *title) {
   char timeStr[9] = "--:--:--";
-  if (_rtcValid) {
-    snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d", _rtcH, _rtcM, _rtcS);
-  } else if (site.isDateTimeReady()) {
-    // Fallback: use OnStep's sidereal-derived time if DS3231 not readable
+  if (site.isDateTimeReady()) {
     JulianDate now = site.getDateTime();
     int h = (int)now.hour;
     int m = (int)((now.hour - h) * 60.0);
@@ -238,6 +234,8 @@ void LocalDisplay::goToTarget(uint8_t idx) {
 // init()
 
 void LocalDisplay::init() {
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+
   if (!_u8g2.begin()) {
     DLF("ERR: LocalDisplay, SSD1306 not found");
     return;
@@ -269,28 +267,6 @@ void LocalDisplay::init() {
 
 void LocalDisplay::poll() {
   if (!_ready) return;
-
-  // ---- Read DS3231 RTC directly (I2C addr 0x68, regs 0=sec 1=min 2=hr, BCD) ----
-  // Bypasses OnStep's sidereal-derived clock, which can run slow on ESP32-C6 due
-  // to hardware timer frequency rounding.  Falls back to site.getDateTime() in
-  // drawHeader() if the DS3231 is absent or unresponsive.
-  _rtcValid = false;
-  Wire.beginTransmission(0x68);
-  Wire.write(0x00);
-  if (Wire.endTransmission() == 0 && Wire.requestFrom((uint8_t)0x68, (uint8_t)3) == 3) {
-    uint8_t sRaw = Wire.read();
-    uint8_t mRaw = Wire.read();
-    uint8_t hRaw = Wire.read();
-    _rtcS = (uint8_t)((sRaw >> 4) * 10 + (sRaw & 0x0F));
-    _rtcM = (uint8_t)((mRaw >> 4) * 10 + (mRaw & 0x0F));
-    if (hRaw & 0x40) {                          // 12-hour mode (bit 6 set)
-      _rtcH = (uint8_t)(((hRaw >> 4) & 0x01) * 10 + (hRaw & 0x0F));
-      if (hRaw & 0x20) _rtcH += 12;             // PM
-    } else {                                    // 24-hour mode
-      _rtcH = (uint8_t)(((hRaw >> 4) & 0x03) * 10 + (hRaw & 0x0F));
-    }
-    _rtcValid = true;
-  }
 
   // Consume accumulated encoder and button events
   int  delta = _readDelta(_encDelta);

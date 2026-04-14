@@ -13,8 +13,17 @@ portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 // also, we can more directly access the timer objects for example:
 // #define HAL_HWTIMER1_SET_PERIOD() itimer1->dev->alarm_low = _nextPeriod1
 
-#define TIMER_RATE_MHZ 16L                           // ESP32 motor timers run at 16MHz so use full resolution
-#define TIMER_RATE_16MHZ_TICKS 1L                    // 16L/TIMER_RATE_MHZ, for the default 16MHz "sub-micros" (16MHz)
+// Platform HAL (e.g. ESP32C6.h) may override these before this file is included.
+// Default: 16 MHz (original ESP32/S2/S3 Xtensa). ESP32-C6 overrides to 8 MHz.
+#ifndef TIMER_FREQ_HZ
+  #define TIMER_FREQ_HZ 16000000UL
+#endif
+#ifndef TIMER_RATE_MHZ
+  #define TIMER_RATE_MHZ 16L                         // ESP32 motor timers run at 16MHz so use full resolution
+#endif
+#ifndef TIMER_RATE_16MHZ_TICKS
+  #define TIMER_RATE_16MHZ_TICKS 1L                  // 16L/TIMER_RATE_MHZ, for the default 16MHz "sub-micros" (16MHz)
+#endif
 
 #if defined(TASKS_HWTIMER1_ENABLE) || defined(TASKS_HWTIMER2_ENABLE) || defined(TASKS_HWTIMER3_ENABLE) || defined(TASKS_HWTIMER4_ENABLE)
   // prepare hw timer for interval in sub-microseconds (1/16us)
@@ -50,9 +59,10 @@ portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
   void HAL_HWTIMER1_WRAPPER();
 
   bool HAL_HWTIMER1_INIT(uint8_t priority) {
-    itimer1 = timerBegin(16000000); // ESP32 timer frequency is 16MHz
+    itimer1 = timerBegin(TIMER_FREQ_HZ);
+    if (itimer1 == NULL) { DLF("ERR: HAL_HWTIMER1_INIT(), timerBegin() failed"); return false; }
     timerAttachInterrupt(itimer1, &HAL_HWTIMER1_WRAPPER);
-    timerAlarm(itimer1, 1000*16, true, 0); // startup one millisecond
+    timerAlarm(itimer1, TIMER_FREQ_HZ/1000, true, 0); // startup one millisecond
     return true;
   }
 
@@ -83,9 +93,10 @@ portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
   void HAL_HWTIMER2_WRAPPER();
 
   bool HAL_HWTIMER2_INIT(uint8_t priority) {
-    itimer2 = timerBegin(16000000); // ESP32 timer frequency is 16MHz
+    itimer2 = timerBegin(TIMER_FREQ_HZ);
+    if (itimer2 == NULL) { DLF("ERR: HAL_HWTIMER2_INIT(), timerBegin() failed"); return false; }
     timerAttachInterrupt(itimer2, &HAL_HWTIMER2_WRAPPER);
-    timerAlarm(itimer2, 1000*16, true, 0); // startup one millisecond
+    timerAlarm(itimer2, TIMER_FREQ_HZ/1000, true, 0); // startup one millisecond
     return true;
   }
 
@@ -116,9 +127,10 @@ portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
   void HAL_HWTIMER3_WRAPPER();
 
   bool HAL_HWTIMER3_INIT(uint8_t priority) {
-    itimer3 = timerBegin(16000000); // ESP32 timer frequency is 16MHz
+    itimer3 = timerBegin(TIMER_FREQ_HZ);
+    if (itimer3 == NULL) { DLF("ERR: HAL_HWTIMER3_INIT(), timerBegin() failed"); return false; }
     timerAttachInterrupt(itimer3, &HAL_HWTIMER3_WRAPPER);
-    timerAlarm(itimer3, 1000*16, true, 0); // startup one millisecond
+    timerAlarm(itimer3, TIMER_FREQ_HZ/1000, true, 0); // startup one millisecond
     return true;
   }
 
@@ -149,9 +161,10 @@ portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
   void HAL_HWTIMER4_WRAPPER();
 
   bool HAL_HWTIMER4_INIT(uint8_t priority) {
-    itimer4 = timerBegin(16000000); // ESP32 timer frequency is 16MHz
+    itimer4 = timerBegin(TIMER_FREQ_HZ);
+    if (itimer4 == NULL) { DLF("ERR: HAL_HWTIMER4_INIT(), timerBegin() failed"); return false; }
     timerAttachInterrupt(itimer4, &HAL_HWTIMER4_WRAPPER);
-    timerAlarm(itimer4, 1000*16, true, 0); // startup one millisecond
+    timerAlarm(itimer4, TIMER_FREQ_HZ/1000, true, 0); // startup one millisecond
     return true;
   }
 
