@@ -412,9 +412,10 @@ bool Tasks::requestHardwareTimer(uint8_t handle) {
   return requestHardwareTimer(handle, 128);
 }
 
-bool Tasks::requestHardwareTimer(uint8_t handle, uint8_t hwPriority) {
+bool Tasks::requestHardwareTimer(uint8_t handle, uint8_t hwPriority, uint8_t startFrom) {
   if (handle != 0 && allocated[handle - 1] && TASKS_HWTIMERS > 0) {
-    for (int num = 0; num < TASKS_HWTIMERS; num++) {
+    int startIdx = (startFrom >= 1) ? (int)(startFrom - 1) : 0;
+    for (int num = startIdx; num < TASKS_HWTIMERS; num++) {
       if (!hardware_timer_allocated[num]) {
         hardware_timer_allocated[num] = task[handle - 1]->requestHardwareTimer(num + 1, hwPriority);
         return hardware_timer_allocated[num];
