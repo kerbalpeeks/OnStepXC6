@@ -6,9 +6,26 @@
 #define HAL_FAST_PROCESSOR
 
 // Base rate for critical task timing (0.0095s = 0.14", 0.2 sec/day)
-// ESP32-C6 GPTimer uses PLL_F80M (80 MHz) as its first clock source, giving an exact
-// integer divider of 5 for 16 MHz → timer is accurate. Same rate as ESP32 Xtensa.
 #define HAL_FRACTIONAL_SEC 105.2631579F
+
+// Hardware timer frequency override for ESP32-C6.
+//
+// The ESP32-C6 on this board has a 4 MHz XTAL (confirmed via board-info serial dump).
+// timerBegin(16000000) iterates clock sources {PLL_F80M, RC_FAST, XTAL} looking for an
+// integer divider in [2, 65536].  For a 4 MHz XTAL:
+//   - XTAL  4 MHz ÷ 16 MHz = 0.25 → integer 0 → rejected
+//   - RC_FAST ~17.5 MHz ÷ 16 MHz = 1 → rejected (below minimum of 2)
+//   - If PLL_F80M is unavailable or returns 0 → all sources fail → NULL returned
+// 2 MHz is the highest frequency achievable in all configurations:
+//   - 4 MHz XTAL ÷ 2 = 2 MHz  (exact, divider = 2 = minimum valid)
+//   - PLL_F80M 80 MHz ÷ 40 = 2 MHz  (exact, when PLL is active)
+//   - RC_FAST ~17.5 MHz ÷ 8 ≈ 2.2 MHz  (8% off, last-resort fallback)
+// Timer precision 0.5 µs is more than adequate for telescope mount motor control.
+// HAL_FRACTIONAL_SEC and the sub-micros accounting are unchanged; only the hardware
+// frequency and the tick-conversion ratio (TIMER_RATE_16MHZ_TICKS) change.
+#define TIMER_FREQ_HZ          2000000UL  // 2 MHz: achievable from 4 MHz XTAL (÷2) or PLL (÷40)
+#define TIMER_RATE_MHZ         2L         // TIMER_FREQ_HZ in MHz
+#define TIMER_RATE_16MHZ_TICKS 8L         // 16L / TIMER_RATE_MHZ: converts sub-micros → timer ticks
 
 // Analog read and write
 #ifndef HAL_VCC

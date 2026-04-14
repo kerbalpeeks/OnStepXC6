@@ -4,8 +4,8 @@
 // mux to block code from running simultaniously
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
-// provides two 32 bit interval timers with 16 bit software pre-scalers, running at 16MHz
-// each timer configured as ~0 to x seconds (granularity of timer is 0.062uS)
+// provides hardware interval timers with 16 bit software pre-scalers
+// default frequency 16 MHz (Xtensa ESP32/S2/S3); overrideable per platform (e.g. 2 MHz on ESP32-C6)
 // timer use doesn't collide with PWM or tone() on these platforms
 
 // notes for future improvements:
@@ -13,9 +13,18 @@ portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 // also, we can more directly access the timer objects for example:
 // #define HAL_HWTIMER1_SET_PERIOD() itimer1->dev->alarm_low = _nextPeriod1
 
-#define TIMER_RATE_MHZ 16L                           // ESP32 motor timers run at 16MHz so use full resolution
-#define TIMER_RATE_16MHZ_TICKS 1L                    // 16L/TIMER_RATE_MHZ, for the default 16MHz "sub-micros" (16MHz)
-#define TIMER_FREQ_HZ 16000000UL                     // timerBegin() target frequency; matches PLL_F80M÷5 on all ESP32 variants
+// Platform HAL (e.g. ESP32C6.h) may define these before this file is included.
+// Default: 16 MHz — correct for ESP32/S2/S3 Xtensa (PLL_F80M 80 MHz ÷ 5).
+// ESP32-C6 with 4 MHz XTAL overrides to 2 MHz (4 MHz XTAL ÷ 2, or PLL 80 MHz ÷ 40).
+#ifndef TIMER_FREQ_HZ
+  #define TIMER_FREQ_HZ 16000000UL
+#endif
+#ifndef TIMER_RATE_MHZ
+  #define TIMER_RATE_MHZ 16L                         // ESP32 motor timers run at 16MHz so use full resolution
+#endif
+#ifndef TIMER_RATE_16MHZ_TICKS
+  #define TIMER_RATE_16MHZ_TICKS 1L                  // 16L/TIMER_RATE_MHZ, for the default 16MHz "sub-micros" (16MHz)
+#endif
 
 #if defined(TASKS_HWTIMER1_ENABLE) || defined(TASKS_HWTIMER2_ENABLE) || defined(TASKS_HWTIMER3_ENABLE) || defined(TASKS_HWTIMER4_ENABLE)
   // prepare hw timer for interval in sub-microseconds (1/16us)
