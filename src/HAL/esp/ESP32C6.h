@@ -6,15 +6,9 @@
 #define HAL_FAST_PROCESSOR
 
 // Base rate for critical task timing (0.0095s = 0.14", 0.2 sec/day)
-// HAL_FRACTIONAL_SEC is the sidereal-clock interrupt rate (Hz); independent of timer frequency.
-// TIMER_FREQ_HZ overrides the default 16 MHz used by HAL_ESP32_V3_HWTIMER.h.
-// 8 MHz is an exact integer divisor of both the 40 MHz XTAL (÷5) and 80 MHz PLL (÷10),
-// so timerBegin(8000000) is reliable on ESP32-C6 regardless of power/clock config.
-// At 16 MHz the prescaler would be 40/16 = 2.5 (non-integer) → timer runs ~13.33 MHz → clock ~17% slow.
+// ESP32-C6 GPTimer uses PLL_F80M (80 MHz) as its first clock source, giving an exact
+// integer divider of 5 for 16 MHz → timer is accurate. Same rate as ESP32 Xtensa.
 #define HAL_FRACTIONAL_SEC 105.2631579F
-#define TIMER_FREQ_HZ          8000000UL   // actual hardware timer frequency for ESP32-C6
-#define TIMER_RATE_MHZ         8L          // TIMER_FREQ_HZ in MHz (used by OnTask period math)
-#define TIMER_RATE_16MHZ_TICKS 2L          // 16L / TIMER_RATE_MHZ: sub-micros → timer ticks ratio
 
 // Analog read and write
 #ifndef HAL_VCC
