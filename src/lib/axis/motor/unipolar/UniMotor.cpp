@@ -122,7 +122,7 @@ bool UniMotor::init() {
     V("success");
     // axes 1 and 2 can use hardware timers for precision tracking
     bool useHwTimer = (axisNumber <= 2);
-    if (useHwTimer && !tasks.requestHardwareTimer(taskHandle, 0)) { VLF(" (no hardware timer!)"); } else { VLF(""); }
+    if (useHwTimer && !tasks.requestHardwareTimer(taskHandle, 0, AXIS_HARDWARE_TIMER_BASE)) { VLF(" (no hardware timer!)"); } else { VLF(""); }
   } else {
     VLF("FAILED!");
     return false;

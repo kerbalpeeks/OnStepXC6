@@ -10,20 +10,21 @@
 
 // Hardware timer frequency override for ESP32-C6.
 //
-// The ESP32-C6 on this board has a 4 MHz XTAL (confirmed via board-info serial dump).
-// timerBegin(16000000) iterates clock sources {PLL_F80M, RC_FAST, XTAL} looking for an
-// integer divider in [2, 65536].  For a 4 MHz XTAL:
-//   - XTAL  4 MHz ÷ 16 MHz = 0.25 → integer 0 → rejected
-//   - RC_FAST ~17.5 MHz ÷ 16 MHz = 1 → rejected (below minimum of 2)
-//   - If PLL_F80M is unavailable or returns 0 → all sources fail → NULL returned
-// 2 MHz is the highest frequency achievable in all configurations:
-//   - 4 MHz XTAL ÷ 2 = 2 MHz  (exact, divider = 2 = minimum valid)
-//   - PLL_F80M 80 MHz ÷ 40 = 2 MHz  (exact, when PLL is active)
-//   - RC_FAST ~17.5 MHz ÷ 8 ≈ 2.2 MHz  (8% off, last-resort fallback)
+// The ESP32-C6 XTAL is 40 MHz; PLL_F80M runs at 80 MHz.
+// timerBegin(freq) iterates clock sources {PLL_F80M, RC_FAST, XTAL} looking for an
+// integer divider in [2, 65536].  For 2 MHz:
+//   - PLL_F80M 80 MHz ÷ 40 = 2 MHz  (exact, when PLL is active — always true at runtime)
+//   - XTAL  40 MHz ÷ 20 = 2 MHz  (exact, works even without PLL)
+//   - RC_FAST ~17.5 MHz ÷ 8 ≈ 2.2 MHz  (8% off, last-resort fallback only)
+// For 16 MHz (the default on other ESP32 variants):
+//   - PLL_F80M 80 MHz ÷ 5 = 16 MHz  (exact, when PLL is active)
+//   - XTAL  40 MHz ÷ 2.5 → not integer → rejected (XTAL fallback fails for 16 MHz)
+// 2 MHz is chosen because it works from XTAL alone (no PLL required), making timer
+// initialisation robust regardless of clock-source availability.
 // Timer precision 0.5 µs is more than adequate for telescope mount motor control.
 // HAL_FRACTIONAL_SEC and the sub-micros accounting are unchanged; only the hardware
 // frequency and the tick-conversion ratio (TIMER_RATE_16MHZ_TICKS) change.
-#define TIMER_FREQ_HZ          2000000UL  // 2 MHz: achievable from 4 MHz XTAL (÷2) or PLL (÷40)
+#define TIMER_FREQ_HZ          2000000UL  // 2 MHz: exact from XTAL (÷20) or PLL (÷40)
 #define TIMER_RATE_MHZ         2L         // TIMER_FREQ_HZ in MHz
 #define TIMER_RATE_16MHZ_TICKS 8L         // 16L / TIMER_RATE_MHZ: converts sub-micros → timer ticks
 

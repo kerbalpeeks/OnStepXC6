@@ -149,7 +149,7 @@ bool StepDirMotor::init() {
   taskHandle = tasks.add(0, 0, true, 0, callback, timerName);
   if (taskHandle) {
     V("success");
-    if (useFastHardwareTimers && !tasks.requestHardwareTimer(taskHandle, 0)) { VLF(" (no hardware timer!)"); } else { VLF(""); }
+    if (useFastHardwareTimers && !tasks.requestHardwareTimer(taskHandle, 0, AXIS_HARDWARE_TIMER_BASE)) { VLF(" (no hardware timer!)"); } else { VLF(""); }
   } else {
     VLF("FAILED!");
     return false;

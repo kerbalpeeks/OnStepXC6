@@ -81,7 +81,7 @@ bool KTechMotor::init() {
   if (taskHandle) {
     VF("success");
     if (useFastHardwareTimers) {
-      if (!tasks.requestHardwareTimer(taskHandle, 0)) {
+      if (!tasks.requestHardwareTimer(taskHandle, 0, AXIS_HARDWARE_TIMER_BASE)) {
         VF(" (no hardware timer!)");
       } else {
         maxFrequency = (1000000.0F/HAL_MAXRATE_LOWER_LIMIT)/2.0F;
