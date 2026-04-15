@@ -79,8 +79,7 @@ class LocalDisplay {
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta     = 0;
     uint8_t       _lastClkState = HIGH;  // previous CLK level for edge detection
-    uint8_t       _clkConfirm   = 0;     // set to 1 on first LOW; step registered on second
-    uint8_t       _clkDirSample = 0;     // DT level captured at the CLK falling edge
+    uint32_t      _encLastStepUs = 0;    // software debounce for encoder steps
 
     // ---- Button state ----
     uint32_t _btnPressTime = 0;
@@ -90,6 +89,7 @@ class LocalDisplay {
 
     static constexpr uint16_t BTN_DEBOUNCE_MS   = 20;
     static constexpr uint16_t BTN_LONG_PRESS_MS = 600;
+    static constexpr uint32_t ENC_DEBOUNCE_US   = 1500;
 };
 
 // Single global instance
