@@ -65,12 +65,18 @@ void LocalDisplay::pollEncoder() {
   // suppresses contact bounce without requiring CLK to stay LOW for another
   // full poll cycle.
   uint8_t clk = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
+  _encPollCount++;
+  if (clk != _lastClkState) _encClkChangeCount++;
   if (clk == LOW && _lastClkState == HIGH) {
+    _encFallCount++;
     uint32_t nowUs = micros();
     if ((uint32_t)(nowUs - _encLastStepUs) >= ENC_DEBOUNCE_US) {
       uint8_t dt = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN);
-      if (dt == HIGH) _encDelta++; else _encDelta--;
+      if (dt == HIGH) { _encDelta++; _encStepCwCount++; }
+      else            { _encDelta--; _encStepCcwCount++; }
       _encLastStepUs = nowUs;
+    } else {
+      _encDebounceDrop++;
     }
   }
   _lastClkState = clk;
@@ -108,6 +114,29 @@ static int _readDelta(volatile int &delta) {
 
 static bool _consumeShort(volatile bool &flag) { bool v = flag; flag = false; return v; }
 static bool _consumeLong (volatile bool &flag) { bool v = flag; flag = false; return v; }
+
+// ---------------------------------------------------------------------------
+// logEncoderDiag — periodic encoder + button instrumentation in debug logs
+
+void LocalDisplay::logEncoderDiag(int delta, bool shortPress, bool longPress) {
+  if (shortPress) _btnShortCount++;
+  if (longPress)  _btnLongCount++;
+
+  uint32_t nowMs = millis();
+  if ((uint32_t)(nowMs - _encDiagLastMs) < ENCODER_DIAG_MS) return;
+
+  _encDiagLastMs = nowMs;
+  VF("DBG: LocalDisplay Enc pins clk="); V(digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN));
+  VF(" dt="); V(digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN));
+  VF(" btn="); V(digitalRead(LOCAL_DISPLAY_ENCODER_BTN_PIN));
+  VF(" | polls="); V(_encPollCount);
+  VF(" clkChg="); V(_encClkChangeCount);
+  VF(" fall="); V(_encFallCount);
+  VF(" drop="); V(_encDebounceDrop);
+  VF(" step+/-="); V(_encStepCwCount); VF("/"); V(_encStepCcwCount);
+  VF(" deltaTick="); V(delta);
+  VF(" btnS/L="); V(_btnShortCount); VF("/"); VL(_btnLongCount);
+}
 
 // ---------------------------------------------------------------------------
 // drawHeader — title left, HH:MM:SS right, separator below
@@ -268,6 +297,7 @@ void LocalDisplay::poll() {
   int  delta = _readDelta(_encDelta);
   bool shortPress = _consumeShort(_btnShort);
   bool longPress  = _consumeLong (_btnLong);
+  logEncoderDiag(delta, shortPress, longPress);
 
   // ---- Input handling per screen ----
   switch (_screen) {
