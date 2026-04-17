@@ -75,6 +75,12 @@
 #define TMC2226                     21     // uses TMC software UART comms  for 1x,2x...,256x  (UART sets spreadCycle/stealthChop etc, dedicated RX/TX UART to each driver using index 0)
 #define STEP_DIR_DRIVER_LAST        21
 
+// unipolar stepper motor driver (e.g. ULN2003 with 28BYJ-48)
+// changes here must be reflected in UniMotor.h
+#define UNI_DRIVER_FIRST            50
+#define ULN2003                     50     // 4-wire unipolar, full-step or half-step
+#define UNI_DRIVER_LAST             55
+
 // servo driver (usually for DC motors equipped with encoders)
 // changes here must be reflected in the ServoDriver.cpp file, etc.
 #define SERVO_DRIVER_FIRST          100
@@ -138,6 +144,7 @@
 #define ODRIVER                     -10    // general purpose flag for a ODRIVE driver motor
 #define SERVO                       -11    // general purpose flag for a SERVO driver motor
 #define STEP_DIR                    -12    // general purpose flag for a STEP_DIR driver motor
+#define UNI                         -13    // general purpose flag for a UNI (unipolar) driver motor
 
 // NV/EEPROM
 #define NV_KEY_VALUE                111111111UL

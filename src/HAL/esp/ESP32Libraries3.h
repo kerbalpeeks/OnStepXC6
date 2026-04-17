@@ -21,10 +21,12 @@
 #endif
 
 // analog read/write capabilities
-#define HAL_HAS_PER_PIN_PWM_RESOLUTION 0
-#define HAL_HAS_PER_PIN_PWM_FREQUENCY 0
-#define HAL_HAS_GLOBAL_PWM_RESOLUTION 1
-#define HAL_HAS_GLOBAL_PWM_FREQUENCY 1
+// Arduino ESP32 core v3.x uses per-pin analogWriteResolution(pin,bits)
+// and analogWriteFrequency(pin,freq); the old global overloads were removed.
+#define HAL_HAS_PER_PIN_PWM_RESOLUTION 1
+#define HAL_HAS_PER_PIN_PWM_FREQUENCY 1
+#define HAL_HAS_GLOBAL_PWM_RESOLUTION 0
+#define HAL_HAS_GLOBAL_PWM_FREQUENCY 0
 #define HAL_PWM_HZ_MAX 200000U
 
 #define HAL_HAS_GLOBAL_ADC_RESOLUTION 1

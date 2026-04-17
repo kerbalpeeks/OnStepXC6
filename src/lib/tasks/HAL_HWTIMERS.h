@@ -44,6 +44,8 @@
       defined(__IMXRT1062__)
   #include "HAL_TEENSY_HWTIMER.h"
 #elif defined(ESP32)
+  // Note: ESP32-C6 (RISC-V) has only 2 general-purpose hardware timers.
+  // Do not set TASKS_HWTIMERS > 2 when building for ESP32-C6.
   #if ESP_ARDUINO_VERSION >= 0x30000
     #include "HAL_ESP32_V3_HWTIMER.h"
   #else

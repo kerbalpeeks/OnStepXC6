@@ -87,6 +87,11 @@ namespace {
 
   ServoMotor motor_1(1, AXIS1_REVERSE, ((ServoDriver*)&driver1), &filterAxis1, &encAxis1, AXIS1_ENCODER_ORIGIN, AXIS1_ENCODER_REVERSE == ON, &feedbackAxis1, &servoControlAxis1);
 
+#elif defined(AXIS1_UNI_PRESENT)
+  const UniPins UniPinsAxis1 = {AXIS1_IN1_PIN, AXIS1_IN2_PIN, AXIS1_IN3_PIN, AXIS1_IN4_PIN, AXIS1_ENABLE_PIN, AXIS1_ENABLE_STATE};
+  const UniSettings UniSettingsAxis1 = {AXIS1_DRIVER_MODEL, AXIS1_DRIVER_STATUS, AXIS1_DRIVER_MICROSTEPS};
+  UniMotor motor_1(1, AXIS1_REVERSE, &UniPinsAxis1, &UniSettingsAxis1);
+
 #elif defined(AXIS1_STEP_DIR_PRESENT)
   const StepDirDriverPins DriverPinsAxis1 = {AXIS1_M0_PIN, AXIS1_M1_PIN, AXIS1_M2_PIN, AXIS1_M2_ON_STATE, AXIS1_M3_PIN, AXIS1_DECAY_PIN, AXIS1_FAULT_PIN};
   const StepDirDriverSettings DriverSettingsAxis1 = {AXIS1_DRIVER_MODEL, AXIS1_DRIVER_STATUS, AXIS1_DRIVER_MICROSTEPS, AXIS1_DRIVER_MICROSTEPS_GOTO, AXIS1_DRIVER_DECAY, AXIS1_DRIVER_DECAY_GOTO};
@@ -202,6 +207,11 @@ namespace {
   #endif
 
   ServoMotor motor_2(2, AXIS2_REVERSE, ((ServoDriver*)&driver2), &filterAxis2, &encAxis2, AXIS2_ENCODER_ORIGIN, AXIS2_ENCODER_REVERSE == ON, &feedbackAxis2, &servoControlAxis2);
+
+#elif defined(AXIS2_UNI_PRESENT)
+  const UniPins UniPinsAxis2 = {AXIS2_IN1_PIN, AXIS2_IN2_PIN, AXIS2_IN3_PIN, AXIS2_IN4_PIN, AXIS2_ENABLE_PIN, AXIS2_ENABLE_STATE};
+  const UniSettings UniSettingsAxis2 = {AXIS2_DRIVER_MODEL, AXIS2_DRIVER_STATUS, AXIS2_DRIVER_MICROSTEPS};
+  UniMotor motor_2(2, AXIS2_REVERSE, &UniPinsAxis2, &UniSettingsAxis2);
 
 #elif defined(AXIS2_STEP_DIR_PRESENT)
   const StepDirDriverPins DriverPinsAxis2 = {AXIS2_M0_PIN, AXIS2_M1_PIN, AXIS2_M2_PIN, AXIS2_M2_ON_STATE, AXIS2_M3_PIN, AXIS2_DECAY_PIN, AXIS2_FAULT_PIN};

@@ -59,6 +59,10 @@ extern Telescope telescope;
 
 #include "src/plugins/Plugins.config.h"
 
+#ifdef LOCAL_DISPLAY_PRESENT
+  #include "src/plugins/localDisplay/LocalDisplay.h"
+#endif
+
 #if DEBUG == PROFILER
   extern void profiler();
 #endif
@@ -119,6 +123,11 @@ void setup() {
   commandChannelInit();
 
   tasks.yield(2000);
+
+  // start local display (SSD1306 + encoder), if configured
+  #ifdef LOCAL_DISPLAY_PRESENT
+    localDisplay.init();
+  #endif
 
   // start any plugins
   #if PLUGIN1 != OFF

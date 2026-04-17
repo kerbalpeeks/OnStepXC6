@@ -207,8 +207,10 @@ class Tasks {
     // *priority* must be 0 (all are higher than s/w task priority 0.)
     // \param handle        task handle
     // \param hwPriority    optional hardware interrupt priority, default is 128 if not specified
+    // \param startFrom     first timer number to consider (1-based); axis motor tasks pass AXIS_HARDWARE_TIMER_BASE
+    //                      so timer 1 is always left available for the sidereal clock
     // \return              true if successful, or false (in which case the standard polling timer will still be available)
-    bool requestHardwareTimer(uint8_t handle, uint8_t hwPriority);
+    bool requestHardwareTimer(uint8_t handle, uint8_t hwPriority, uint8_t startFrom = 1);
     bool requestHardwareTimer(uint8_t handle);
 
     // change task callback

@@ -42,7 +42,9 @@
 
 #define SAL_XB1                     24     // SAL-XB1 telescope mount controller
 
-#define PINMAP_LAST                 24
+#define ESP32C6Supermini            25     // ESP32-C6 Supermini bare board (RISC-V, Arduino ESP32 core v3.x)
+
+#define PINMAP_LAST                 25
 
 // WEATHER sensors (temperature, pressure, and humidity)
 #define WEATHER_FIRST               1
@@ -145,7 +147,11 @@
 #define TASKS_MAX                   60     // up to 60 tasks
 #define TASKS_SKIP_MISSED                  // just skip missed tasks if too late
 #ifdef ESP32
-  #define TASKS_HWTIMERS            4      // up to 4 hardware timers
+  #if defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32H2)
+    #define TASKS_HWTIMERS          2      // RISC-V variants: only 2 general-purpose hardware timers
+  #else
+    #define TASKS_HWTIMERS          4      // Xtensa ESP32/S2/S3: 4 hardware timers
+  #endif
 #else
   #define TASKS_HWTIMERS            3
 #endif
