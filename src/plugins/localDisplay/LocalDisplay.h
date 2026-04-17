@@ -62,6 +62,7 @@ class LocalDisplay {
     void drawMenu(const char * const *items, uint8_t count, uint8_t selected);
     void drawPointing();
     void drawStub(const char *label);
+    void logEncoderDiag(int delta, bool shortPress, bool longPress);
 
     // ---- Action ----
     void goToTarget(uint8_t idx);
@@ -79,8 +80,7 @@ class LocalDisplay {
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta     = 0;
     uint8_t       _lastClkState = HIGH;  // previous CLK level for edge detection
-    uint8_t       _clkConfirm   = 0;     // set to 1 on first LOW; step registered on second
-    uint8_t       _clkDirSample = 0;     // DT level captured at the CLK falling edge
+    uint32_t      _encLastStepUs = 0;    // software debounce for encoder steps
 
     // ---- Button state ----
     uint32_t _btnPressTime = 0;
@@ -90,6 +90,19 @@ class LocalDisplay {
 
     static constexpr uint16_t BTN_DEBOUNCE_MS   = 20;
     static constexpr uint16_t BTN_LONG_PRESS_MS = 600;
+    static constexpr uint32_t ENC_DEBOUNCE_US   = 1500;
+    static constexpr uint16_t ENCODER_DIAG_MS   = 2000;
+
+    // ---- Encoder diagnostics ----
+    uint32_t _encDiagLastMs      = 0;
+    uint32_t _encPollCount       = 0;
+    uint32_t _encClkChangeCount  = 0;
+    uint32_t _encFallCount       = 0;
+    uint32_t _encDebounceDrop    = 0;
+    uint32_t _encStepCwCount     = 0;
+    uint32_t _encStepCcwCount    = 0;
+    uint32_t _btnShortCount      = 0;
+    uint32_t _btnLongCount       = 0;
 };
 
 // Single global instance

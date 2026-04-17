@@ -53,29 +53,31 @@ void ldPollWrapper()    { localDisplay.poll(); }
 void ldEncoderWrapper() { localDisplay.pollEncoder(); }
 
 // ---------------------------------------------------------------------------
-// pollEncoder() — runs every 10ms via its own task
+// pollEncoder() — runs every 2ms via its own task
 // Samples CLK/DT for encoder movement and SW for button state.
 // Writes to _encDelta, _btnShort, _btnLong only.
 
 void LocalDisplay::pollEncoder() {
   if (!_ready) return;
 
-  // --- Rotary encoder: falling edge of CLK with 2-sample noise filter ---
-  // DT is sampled IMMEDIATELY when CLK first falls — this is the only moment
-  // the two signals are in the correct phase relationship for direction sensing.
-  // A second consecutive LOW poll then confirms the edge is genuine (not a
-  // sub-10ms noise spike), before the step is registered.
+  // --- Rotary encoder: falling edge of CLK + short software debounce ---
+  // DT is sampled immediately on the CLK falling edge, then a short debounce
+  // suppresses contact bounce without requiring CLK to stay LOW for another
+  // full poll cycle.
   uint8_t clk = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
+  _encPollCount++;
+  if (clk != _lastClkState) _encClkChangeCount++;
   if (clk == LOW && _lastClkState == HIGH) {
-    // CLK just fell — capture DT immediately while phases are still valid
-    _clkDirSample = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN);
-    _clkConfirm   = 1;
-  } else if (clk == LOW && _clkConfirm == 1) {
-    // Second consecutive LOW — edge is real; use direction sampled at t=0
-    if (_clkDirSample == HIGH) _encDelta++; else _encDelta--;
-    _clkConfirm = 0;
-  } else if (clk == HIGH) {
-    _clkConfirm = 0;                      // CLK returned HIGH — reset
+    _encFallCount++;
+    uint32_t nowUs = micros();
+    if ((uint32_t)(nowUs - _encLastStepUs) >= ENC_DEBOUNCE_US) {
+      uint8_t dt = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN);
+      if (dt == HIGH) { _encDelta++; _encStepCwCount++; }
+      else            { _encDelta--; _encStepCcwCount++; }
+      _encLastStepUs = nowUs;
+    } else {
+      _encDebounceDrop++;
+    }
   }
   _lastClkState = clk;
 
@@ -112,6 +114,29 @@ static int _readDelta(volatile int &delta) {
 
 static bool _consumeShort(volatile bool &flag) { bool v = flag; flag = false; return v; }
 static bool _consumeLong (volatile bool &flag) { bool v = flag; flag = false; return v; }
+
+// ---------------------------------------------------------------------------
+// logEncoderDiag — periodic encoder + button instrumentation in debug logs
+
+void LocalDisplay::logEncoderDiag(int delta, bool shortPress, bool longPress) {
+  if (shortPress) _btnShortCount++;
+  if (longPress)  _btnLongCount++;
+
+  uint32_t nowMs = millis();
+  if ((uint32_t)(nowMs - _encDiagLastMs) < ENCODER_DIAG_MS) return;
+
+  _encDiagLastMs = nowMs;
+  VF("DBG: LocalDisplay Enc pins clk="); V(digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN));
+  VF(" dt="); V(digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN));
+  VF(" btn="); V(digitalRead(LOCAL_DISPLAY_ENCODER_BTN_PIN));
+  VF(" | polls="); V(_encPollCount);
+  VF(" clkChg="); V(_encClkChangeCount);
+  VF(" fall="); V(_encFallCount);
+  VF(" drop="); V(_encDebounceDrop);
+  VF(" step+/-="); V(_encStepCwCount); VF("/"); V(_encStepCcwCount);
+  VF(" deltaTick="); V(delta);
+  VF(" btnS/L="); V(_btnShortCount); VF("/"); VL(_btnLongCount);
+}
 
 // ---------------------------------------------------------------------------
 // drawHeader — title left, HH:MM:SS right, separator below
@@ -248,9 +273,9 @@ void LocalDisplay::init() {
   pinMode(LOCAL_DISPLAY_ENCODER_BTN_PIN, INPUT_PULLUP);
   _lastClkState = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
 
-  // Fast encoder poll task (10ms, priority 6)
+  // Fast encoder poll task (2ms, priority 6)
   VF("MSG: LocalDisplay, start encoder task... ");
-  if (tasks.add(10, 0, true, 6, ldEncoderWrapper, "LdEnc")) { VLF("ok"); }
+  if (tasks.add(2, 0, true, 6, ldEncoderWrapper, "LdEnc")) { VLF("ok"); }
   else { VLF("FAILED!"); return; }
 
   // Display poll task (LOCAL_DISPLAY_POLL_MS, priority 7)
@@ -272,6 +297,7 @@ void LocalDisplay::poll() {
   int  delta = _readDelta(_encDelta);
   bool shortPress = _consumeShort(_btnShort);
   bool longPress  = _consumeLong (_btnLong);
+  logEncoderDiag(delta, shortPress, longPress);
 
   // ---- Input handling per screen ----
   switch (_screen) {
