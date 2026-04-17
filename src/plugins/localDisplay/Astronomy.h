@@ -53,7 +53,7 @@ static void _outerPlanet(double jd, double T,
   double v  = 2.0 * atan2(sqrt(1.0 + e) * sin(E / 2.0),
                            sqrt(1.0 - e) * cos(E / 2.0));
   double r  = a * (1.0 - e * cos(E));
-  double u  = v + wp_rad;
+  double u  = v + wp_rad - Om_rad;  // argument of latitude = true anomaly + argument of perihelion (ω̃ - Ω)
 
   double xh = r * (cos(Om_rad)*cos(u) - sin(Om_rad)*sin(u)*cos(i_rad));
   double yh = r * (sin(Om_rad)*cos(u) + cos(Om_rad)*sin(u)*cos(i_rad));
@@ -69,16 +69,47 @@ static void _outerPlanet(double jd, double T,
 }
 
 // ---------------------------------------------------------------------------
-// Public: Moon (~2° accuracy, Meeus low-precision method)
+// Public: Moon (~0.3° accuracy, Meeus Ch.22 with main perturbation terms)
 
 static void moon(double jd, double *ra, double *dec) {
-  double d   = jd - 2451545.0;
-  double L   = _wrap360(218.316 + 13.176396 * d);
-  double M   = _wrap360(134.963 + 13.064993 * d);
-  double F   = _wrap360(93.272  + 13.229350 * d);
-  double lon = L + 6.289 * sin(M * M_PI / 180.0);
-  double lat =     5.128 * sin(F * M_PI / 180.0);
+  double d  = jd - 2451545.0;
+  double L  = _wrap360(218.316 + 13.176396 * d);
+  double M  = _wrap360(134.963 + 13.064993 * d) * M_PI / 180.0;
+  double F  = _wrap360(93.272  + 13.229350 * d) * M_PI / 180.0;
+  double D  = _wrap360(297.850 + 12.190749 * d) * M_PI / 180.0;  // mean elongation
+  double Ms = _wrap360(357.529 +  0.985608 * d) * M_PI / 180.0;  // Sun's mean anomaly
+  double lon = L
+    + 6.289 * sin(M)
+    - 1.274 * sin(2*D - M)
+    + 0.658 * sin(2*D)
+    - 0.214 * sin(2*M)
+    - 0.186 * sin(Ms)
+    - 0.059 * sin(2*D - 2*M)
+    - 0.057 * sin(2*D - M + Ms)
+    + 0.053 * sin(2*D + M)
+    + 0.046 * sin(2*D - Ms);
+  double lat =
+    + 5.128 * sin(F)
+    - 0.280 * sin(M + F)
+    - 0.277 * sin(M - F)
+    - 0.173 * sin(2*D - F)
+    - 0.055 * sin(2*D - M + F);
   _eclToEqu(lon, lat, _obliquity(jd), ra, dec);
+}
+
+// ---------------------------------------------------------------------------
+// Public: Mercury (~1° accuracy, Meeus Table 33.a)
+
+static void mercury(double jd, double *ra, double *dec) {
+  double T = (jd - 2451545.0) / 36525.0;
+  _outerPlanet(jd, T,
+    252.250906 + 149472.674986 * T,  // L
+    0.387098,                         // a (AU)
+    0.205631   + 0.000020     * T,   // e
+    7.004986   - 0.002780     * T,   // i (deg)
+    48.330893  + 1.186189     * T,   // Om (deg)
+    77.456119  + 1.556473     * T,   // wp (deg)
+    ra, dec);
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +169,36 @@ static void saturn(double jd, double *ra, double *dec) {
     2.488878   - 0.003400    * T,    // i (deg)
     113.665503 - 0.279655    * T,    // Om (deg)
     93.056787  + 1.963722    * T,    // wp (deg)
+    ra, dec);
+}
+
+// ---------------------------------------------------------------------------
+// Public: Uranus (~1° accuracy, Meeus Table 33.a)
+
+static void uranus(double jd, double *ra, double *dec) {
+  double T = (jd - 2451545.0) / 36525.0;
+  _outerPlanet(jd, T,
+    314.055005 + 429.863546  * T,    // L
+    19.191264,                        // a (AU)
+    0.047168   - 0.000016    * T,    // e
+    0.769986   - 0.004954    * T,    // i (deg)
+    74.005957  + 0.521628    * T,    // Om (deg)
+    173.005159 + 1.486378    * T,    // wp (deg)
+    ra, dec);
+}
+
+// ---------------------------------------------------------------------------
+// Public: Neptune (~1° accuracy, Meeus Table 33.a)
+
+static void neptune(double jd, double *ra, double *dec) {
+  double T = (jd - 2451545.0) / 36525.0;
+  _outerPlanet(jd, T,
+    304.348665 + 219.885914  * T,    // L
+    30.068963,                        // a (AU)
+    0.008586   + 0.000001    * T,    // e
+    1.769953   - 0.009821    * T,    // i (deg)
+    131.784057 + 1.102204    * T,    // Om (deg)
+    48.120276  + 0.029150    * T,    // wp (deg)
     ra, dec);
 }
 
