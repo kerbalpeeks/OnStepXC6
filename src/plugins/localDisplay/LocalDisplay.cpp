@@ -8,6 +8,11 @@
 #include "Astronomy.h"
 #include "../../lib/calendars/Calendars.h"
 
+// SSD1306 default I2C address (0x3C, or 0x3D with SA0 tied HIGH)
+#ifndef LOCAL_DISPLAY_I2C_ADDR
+  #define LOCAL_DISPLAY_I2C_ADDR 0x3C
+#endif
+
 // ---------------------------------------------------------------------------
 // U8g2 display object (128×64 SSD1306, hardware I2C, 2-page buffer)
 static U8G2_SSD1306_128X64_NONAME_2_HW_I2C _u8g2(U8G2_R0, /*reset=*/U8X8_PIN_NONE);
@@ -18,6 +23,7 @@ static U8G2_SSD1306_128X64_NONAME_2_HW_I2C _u8g2(U8G2_R0, /*reset=*/U8X8_PIN_NON
 struct LdTarget {
   const char *name;
   const char *fact[3];
+  LdShape     shape;
   void (*getPos)(double jd, double *ra, double *dec);
 };
 
@@ -25,24 +31,44 @@ static const LdTarget _targets[] = {
   {
     "Moon",
     { "Dist:  ~384,400 km", "Diam:    3,475 km", "Gravity:    0.17 g" },
+    SHAPE_MOON,
     Astronomy::moon
+  },
+  {
+    "Venus",
+    { "Dist:   ~108M km  ", "Diam:   12,104 km", "Gravity:    0.90 g" },
+    SHAPE_DISC,
+    Astronomy::venus
+  },
+  {
+    "Mars",
+    { "Dist:   ~228M km  ", "Diam:    6,779 km", "Gravity:    0.38 g" },
+    SHAPE_DISC,
+    Astronomy::mars
   },
   {
     "Jupiter",
     { "Dist:      ~5.2 AU", "Diam:  139,820 km", "Gravity:    2.53 g" },
+    SHAPE_BANDS,
     Astronomy::jupiter
+  },
+  {
+    "Saturn",
+    { "Dist:      ~9.5 AU", "Diam:  116,460 km", "Gravity:    1.07 g" },
+    SHAPE_SATURN,
+    Astronomy::saturn
   },
 };
 static constexpr uint8_t NUM_TARGETS = sizeof(_targets) / sizeof(_targets[0]);
 
 // ---------------------------------------------------------------------------
-// Menu item arrays
+// Main menu: "Move to..." first so a single click selects it immediately
 
 static const char * const _mainItems[] = {
-  "Settings",
   "Move to...",
   "How to use",
-  "Factory reset"
+  "Factory reset",
+  "Settings"
 };
 static constexpr uint8_t MAIN_COUNT = 4;
 
@@ -54,16 +80,13 @@ void ldEncoderWrapper() { localDisplay.pollEncoder(); }
 
 // ---------------------------------------------------------------------------
 // pollEncoder() — runs every 2ms via its own task
-// Samples CLK/DT for encoder movement and SW for button state.
+// Uses falling-edge detection on CLK + micros() debounce to suppress bounce.
 // Writes to _encDelta, _btnShort, _btnLong only.
 
 void LocalDisplay::pollEncoder() {
   if (!_ready) return;
 
-  // --- Rotary encoder: falling edge of CLK + short software debounce ---
-  // DT is sampled immediately on the CLK falling edge, then a short debounce
-  // suppresses contact bounce without requiring CLK to stay LOW for another
-  // full poll cycle.
+  // --- Rotary encoder: falling edge of CLK + micros debounce ---
   uint8_t clk = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
   _encPollCount++;
   if (clk != _lastClkState) _encClkChangeCount++;
@@ -84,23 +107,54 @@ void LocalDisplay::pollEncoder() {
   // --- Button debounce ---
   bool pressed = (digitalRead(LOCAL_DISPLAY_ENCODER_BTN_PIN) == LOW);
 
+  #ifdef LOCAL_DISPLAY_DEBUG
+    if ((uint8_t)pressed != _dbgBtnRaw) {
+      Serial.printf("[BTN] pin %d -> %d\n", LOCAL_DISPLAY_ENCODER_BTN_PIN, (int)pressed);
+      _dbgBtnRaw = (uint8_t)pressed;
+    }
+  #endif
+
   if (pressed && !_btnHeld) {
     if (_btnPressTime == 0) {
       _btnPressTime = millis();
+      #ifdef LOCAL_DISPLAY_DEBUG
+        Serial.printf("[BTN] press start\n");
+      #endif
     } else if (millis() - _btnPressTime > BTN_DEBOUNCE_MS) {
       _btnHeld = true;
+      #ifdef LOCAL_DISPLAY_DEBUG
+        Serial.printf("[BTN] debounce confirmed\n");
+      #endif
     }
   }
 
   if (!pressed && _btnHeld) {
     uint32_t held = millis() - _btnPressTime;
-    if (held >= BTN_LONG_PRESS_MS) _btnLong  = true;
-    else                            _btnShort = true;
+    if (held >= BTN_LONG_PRESS_MS) {
+      _btnLong = true;
+      #ifdef LOCAL_DISPLAY_DEBUG
+        Serial.printf("[BTN] LONG held=%lums\n", (unsigned long)held);
+      #endif
+    } else {
+      _btnShort = true;
+      #ifdef LOCAL_DISPLAY_DEBUG
+        Serial.printf("[BTN] SHORT held=%lums\n", (unsigned long)held);
+      #endif
+    }
     _btnHeld      = false;
     _btnPressTime = 0;
   }
 
-  if (!pressed && !_btnHeld) _btnPressTime = 0;
+  if (!pressed && !_btnHeld) {
+    if (_btnPressTime != 0) {
+      #ifdef LOCAL_DISPLAY_DEBUG
+        _dbgBounceCount++;
+        Serial.printf("[BTN] bounce/abandon after %lums total=%u\n",
+                      (unsigned long)(millis() - _btnPressTime), _dbgBounceCount);
+      #endif
+      _btnPressTime = 0;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -116,7 +170,7 @@ static bool _consumeShort(volatile bool &flag) { bool v = flag; flag = false; re
 static bool _consumeLong (volatile bool &flag) { bool v = flag; flag = false; return v; }
 
 // ---------------------------------------------------------------------------
-// logEncoderDiag — periodic encoder + button instrumentation in debug logs
+// logEncoderDiag — periodic encoder + button diagnostics via verbose serial
 
 void LocalDisplay::logEncoderDiag(int delta, bool shortPress, bool longPress) {
   if (shortPress) _btnShortCount++;
@@ -124,18 +178,18 @@ void LocalDisplay::logEncoderDiag(int delta, bool shortPress, bool longPress) {
 
   uint32_t nowMs = millis();
   if ((uint32_t)(nowMs - _encDiagLastMs) < ENCODER_DIAG_MS) return;
-
   _encDiagLastMs = nowMs;
-  VF("DBG: LocalDisplay Enc pins clk="); V(digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN));
+
+  VF("DBG: LocalDisplay Enc clk="); V(digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN));
   VF(" dt="); V(digitalRead(LOCAL_DISPLAY_ENCODER_DT_PIN));
   VF(" btn="); V(digitalRead(LOCAL_DISPLAY_ENCODER_BTN_PIN));
   VF(" | polls="); V(_encPollCount);
   VF(" clkChg="); V(_encClkChangeCount);
   VF(" fall="); V(_encFallCount);
   VF(" drop="); V(_encDebounceDrop);
-  VF(" step+/-="); V(_encStepCwCount); VF("/"); V(_encStepCcwCount);
-  VF(" deltaTick="); V(delta);
-  VF(" btnS/L="); V(_btnShortCount); VF("/"); VL(_btnLongCount);
+  VF(" +/-="); V(_encStepCwCount); VF("/"); V(_encStepCcwCount);
+  VF(" delta="); V(delta);
+  VF(" S/L="); V(_btnShortCount); VF("/"); VL(_btnLongCount);
 }
 
 // ---------------------------------------------------------------------------
@@ -173,30 +227,47 @@ void LocalDisplay::drawMenu(const char * const *items, uint8_t count,
 }
 
 // ---------------------------------------------------------------------------
-// drawPointing — image placeholder + facts + optional slew bar
+// drawTargetIcon — simple icon per target type, centred at (20, 35)
+
+void LocalDisplay::drawTargetIcon(LdShape shape) {
+  _u8g2.setDrawColor(1);
+  switch (shape) {
+
+    case SHAPE_MOON:
+      _u8g2.drawDisc(20, 35, 15, U8G2_DRAW_ALL);
+      _u8g2.setDrawColor(0);
+      _u8g2.drawDisc(27, 32, 12, U8G2_DRAW_ALL);
+      _u8g2.setDrawColor(1);
+      break;
+
+    case SHAPE_DISC:
+      _u8g2.drawDisc(20, 35, 13, U8G2_DRAW_ALL);
+      break;
+
+    case SHAPE_BANDS:
+      _u8g2.drawCircle(20, 35, 16, U8G2_DRAW_ALL);
+      _u8g2.drawHLine(5, 30, 30);
+      _u8g2.drawHLine(5, 33, 30);
+      _u8g2.drawHLine(5, 37, 30);
+      _u8g2.drawHLine(5, 40, 30);
+      break;
+
+    case SHAPE_SATURN:
+      _u8g2.drawDisc(20, 35, 10, U8G2_DRAW_ALL);
+      _u8g2.drawEllipse(20, 35, 17, 5, U8G2_DRAW_ALL);
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// drawPointing — icon left, facts right, optional slew bar at bottom
 
 void LocalDisplay::drawPointing() {
   const LdTarget &tgt = _targets[_targetIdx];
   bool slewing = mount.isSlewing();
 
   drawHeader(tgt.name);
-
-  // Placeholder image (40×40) centred at x=20, y=35
-  _u8g2.setDrawColor(1);
-  if (_targetIdx == 0) {
-    // Moon: crescent shape
-    _u8g2.drawDisc(20, 35, 15, U8G2_DRAW_ALL);
-    _u8g2.setDrawColor(0);
-    _u8g2.drawDisc(27, 32, 12, U8G2_DRAW_ALL);
-    _u8g2.setDrawColor(1);
-  } else {
-    // Jupiter: circle with band lines
-    _u8g2.drawCircle(20, 35, 16, U8G2_DRAW_ALL);
-    _u8g2.drawHLine(5, 30, 30);
-    _u8g2.drawHLine(5, 33, 30);
-    _u8g2.drawHLine(5, 37, 30);
-    _u8g2.drawHLine(5, 40, 30);
-  }
+  drawTargetIcon(tgt.shape);
 
   // Facts (right panel x=44)
   _u8g2.setFont(u8g2_font_5x7_tf);
@@ -259,10 +330,20 @@ void LocalDisplay::goToTarget(uint8_t idx) {
 // init()
 
 void LocalDisplay::init() {
-  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+  // Wire was already initialised by DS3231 during telescope.init().
+  // A second Wire.begin() on ESP32 v3.x tears down the ESP-IDF I2C driver
+  // and leaves it in ESP_ERR_INVALID_STATE. Do NOT call Wire.begin() here.
+
+  // Probe SSD1306 before initialising U8g2 — a missing display must not
+  // corrupt the shared I2C bus used by the DS3231 clock.
+  Wire.beginTransmission(LOCAL_DISPLAY_I2C_ADDR);
+  if (Wire.endTransmission() != 0) {
+    DLF("WRN: LocalDisplay, SSD1306 not found on I2C - display disabled");
+    return;
+  }
 
   if (!_u8g2.begin()) {
-    DLF("ERR: LocalDisplay, SSD1306 not found");
+    DLF("ERR: LocalDisplay, SSD1306 init failed");
     return;
   }
   _u8g2.setContrast(200);
@@ -273,8 +354,15 @@ void LocalDisplay::init() {
   pinMode(LOCAL_DISPLAY_ENCODER_BTN_PIN, INPUT_PULLUP);
   _lastClkState = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
 
+  #ifdef LOCAL_DISPLAY_DEBUG
+    Serial.printf("[LocalDisplay] BTN=%d CLK=%d DT=%d\n",
+                  LOCAL_DISPLAY_ENCODER_BTN_PIN,
+                  LOCAL_DISPLAY_ENCODER_CLK_PIN,
+                  LOCAL_DISPLAY_ENCODER_DT_PIN);
+  #endif
+
   // Fast encoder poll task (2ms, priority 6)
-  VF("MSG: LocalDisplay, start encoder task... ");
+  VF("MSG: LocalDisplay, start encoder task (2ms)... ");
   if (tasks.add(2, 0, true, 6, ldEncoderWrapper, "LdEnc")) { VLF("ok"); }
   else { VLF("FAILED!"); return; }
 
@@ -309,8 +397,8 @@ void LocalDisplay::poll() {
       }
       if (shortPress) {
         switch (_menuSel) {
-          case 0: _stubTitle = _mainItems[0]; _screen = SCR_STUB;    break;
-          case 1: _screen = SCR_MOVE_TO;                             break;
+          case 0: _screen = SCR_MOVE_TO;                             break;
+          case 1: _stubTitle = _mainItems[1]; _screen = SCR_STUB;    break;
           case 2: _stubTitle = _mainItems[2]; _screen = SCR_STUB;    break;
           case 3: _stubTitle = _mainItems[3]; _screen = SCR_STUB;    break;
         }
@@ -329,7 +417,7 @@ void LocalDisplay::poll() {
       }
       if (longPress) {
         _screen  = SCR_MAIN_MENU;
-        _menuSel = 1;
+        _menuSel = 0;  // "Move to..." is at index 0
       }
       break;
 
