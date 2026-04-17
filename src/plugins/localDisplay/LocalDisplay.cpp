@@ -605,8 +605,8 @@ void LocalDisplay::init() {
     double latDeg = site.location.latitude  * 180.0 / M_PI;
     double lonDeg = site.location.longitude * 180.0 / M_PI;
     char latBuf[20], lonBuf[20];
-    snprintf(latBuf, sizeof(latBuf), "Lat: %+.4f", latDeg);
-    snprintf(lonBuf, sizeof(lonBuf), "Lon: %+.4f", lonDeg);
+    snprintf(latBuf, sizeof(latBuf), "Lat: %+.6f", latDeg);
+    snprintf(lonBuf, sizeof(lonBuf), "Lon: %+.6f", lonDeg);
     _u8g2.firstPage();
     do {
       _u8g2.setFont(u8g2_font_6x10_tf);
