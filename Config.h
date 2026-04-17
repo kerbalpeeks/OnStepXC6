@@ -400,7 +400,7 @@
 #define LOCAL_DISPLAY                  ON
 #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14
 #define LOCAL_DISPLAY_ENCODER_DT_PIN    9
-#define LOCAL_DISPLAY_ENCODER_BTN_PIN   8
+#define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // GPIO1: free when PEC_SENSE OFF; avoid GPIO8 (RGB LED)
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------

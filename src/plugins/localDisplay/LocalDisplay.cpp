@@ -58,6 +58,24 @@ static const LdTarget _targets[] = {
     SHAPE_SATURN,
     Astronomy::saturn
   },
+  {
+    "Uranus",
+    { "Dist:     ~19.2 AU", "Diam:   50,724 km", "Gravity:    0.89 g" },
+    SHAPE_DISC,
+    Astronomy::uranus
+  },
+  {
+    "Neptune",
+    { "Dist:     ~30.1 AU", "Diam:   49,244 km", "Gravity:    1.14 g" },
+    SHAPE_DISC,
+    Astronomy::neptune
+  },
+  {
+    "Mercury",
+    { "Dist:     ~77M km ", "Diam:    4,879 km", "Gravity:    0.38 g" },
+    SHAPE_DISC,
+    Astronomy::mercury
+  },
 };
 static constexpr uint8_t NUM_TARGETS = sizeof(_targets) / sizeof(_targets[0]);
 
@@ -198,10 +216,10 @@ void LocalDisplay::logEncoderDiag(int delta, bool shortPress, bool longPress) {
 void LocalDisplay::drawHeader(const char *title) {
   char timeStr[9] = "--:--:--";
   if (site.isDateTimeReady()) {
-    JulianDate now = site.getDateTime();
-    int h = (int)now.hour;
-    int m = (int)((now.hour - h) * 60.0);
-    int s = (int)(((now.hour - h) * 60.0 - m) * 60.0);
+    JulianDate local = site.UT1ToLocal(site.getDateTime());
+    int h = (int)local.hour;
+    int m = (int)((local.hour - h) * 60.0);
+    int s = (int)(((local.hour - h) * 60.0 - m) * 60.0);
     snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d", h, m, s);
   }
   _u8g2.setFont(u8g2_font_6x10_tf);
@@ -347,6 +365,24 @@ void LocalDisplay::init() {
     return;
   }
   _u8g2.setContrast(200);
+
+  // Splash screen: show version + site lat/lon for 2 seconds
+  {
+    double latDeg = site.location.latitude  * 180.0 / M_PI;
+    double lonDeg = site.location.longitude * 180.0 / M_PI;
+    char latBuf[20], lonBuf[20];
+    snprintf(latBuf, sizeof(latBuf), "Lat: %+.4f", latDeg);
+    snprintf(lonBuf, sizeof(lonBuf), "Lon: %+.4f", lonDeg);
+    _u8g2.firstPage();
+    do {
+      _u8g2.setFont(u8g2_font_6x10_tf);
+      _u8g2.drawStr(0, 12, "OnStep Pointer");
+      _u8g2.drawHLine(0, 14, 128);
+      _u8g2.drawStr(0, 32, latBuf);
+      _u8g2.drawStr(0, 48, lonBuf);
+    } while (_u8g2.nextPage());
+    delay(2000);
+  }
 
   // Configure encoder pins — INPUT_PULLUP so they read HIGH at rest
   pinMode(LOCAL_DISPLAY_ENCODER_CLK_PIN, INPUT_PULLUP);
