@@ -51,7 +51,15 @@ enum LdShape : uint8_t {
   SHAPE_MOON,    // crescent
   SHAPE_DISC,    // plain filled disc (Venus, Mars)
   SHAPE_BANDS,   // disc with horizontal bands (Jupiter)
-  SHAPE_SATURN   // disc + ellipse ring
+  SHAPE_SATURN,   // disc + ellipse ring
+  SHAPE_JUPITER,
+  SHAPE_MERCURY,
+  SHAPE_VENUS,
+  SHAPE_PLUTO,
+  SHAPE_MARS,
+  SHAPE_URANUS,
+  SHAPE_NEPTUNE,
+  SHAPE_EARTH
 };
 
 // ---------------------------------------------------------------------------
