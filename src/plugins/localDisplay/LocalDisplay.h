@@ -5,21 +5,24 @@
 // Configured via Config.h:
 //   #define LOCAL_DISPLAY                  ON
 //   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14
-//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    0
-//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1
+//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    9
+//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // GPIO1: free when PEC_SENSE OFF
 //   #define LOCAL_DISPLAY_POLL_MS          100   // optional, default 100
 //
-// Required Arduino libraries: U8g2 (by olikraus, install via Library Manager).
+// Button pin notes for ESP32-C6 Supermini:
+//   GPIO8  — onboard RGB LED; INPUT_PULLUP holds pin at ~mid-rail → AVOID for BTN
+//   GPIO1  — PEC_SENSE pin (free when PEC_SENSE OFF); recommended for BTN
+//   GPIO12/13 — USB D±; avoid while USB-CDC is active
+//   GPIO21/22/23 — not on the accessible breadboard header row — avoid
 //
-// Recommended encoder pin assignment for ESP32-C6 Supermini:
-//   #define LOCAL_DISPLAY_ENCODER_CLK_PIN  14   // right column — clear of both motor groups
-//   #define LOCAL_DISPLAY_ENCODER_DT_PIN    9   // right column
-//   #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // left column — 20ms debounce filters motor EMI
-// CLK/DT must be far from motor coil pins for quadrature precision.
-// BTN only needs a sustained 20ms LOW, so GPIO1 (adjacent to Axis2 motors GPIO2-5) is fine.
-// GPIO8  — onboard RGB LED; INPUT_PULLUP lights the LED — avoid for BTN.
-// GPIO12/13 — USB D±; avoid while USB-CDC is active.
-// GPIO21/22/23 — not on the accessible breadboard header row — avoid.
+// I2C note: Wire.begin() must already have been called before LocalDisplay::init()
+// runs (the DS3231 driver does this). LocalDisplay does NOT call Wire.begin() to
+// avoid double-initialising the ESP-IDF I2C driver (causes ESP_ERR_INVALID_STATE).
+//
+// Button debug: add  #define LOCAL_DISPLAY_DEBUG  in Config.h to enable
+// Serial.printf logging of raw pin transitions and press/release events.
+//
+// Required Arduino library: U8g2 (by olikraus, install via Library Manager).
 #pragma once
 
 #include "../../Common.h"
@@ -43,6 +46,14 @@ enum LdScreen : uint8_t {
   SCR_STUB        // placeholder for Settings / How to use / Factory reset
 };
 
+// Icon shape for each target's pointing screen
+enum LdShape : uint8_t {
+  SHAPE_MOON,    // crescent
+  SHAPE_DISC,    // plain filled disc (Venus, Mars)
+  SHAPE_BANDS,   // disc with horizontal bands (Jupiter)
+  SHAPE_SATURN   // disc + ellipse ring
+};
+
 // ---------------------------------------------------------------------------
 
 class LocalDisplay {
@@ -53,7 +64,7 @@ class LocalDisplay {
     // Called by task scheduler at LOCAL_DISPLAY_POLL_MS — handles display + input
     void poll();
 
-    // Called by fast encoder task every 10ms — samples CLK/DT/button
+    // Called by fast encoder task every 2ms — samples CLK/DT/button
     void pollEncoder();
 
   private:
@@ -62,6 +73,7 @@ class LocalDisplay {
     void drawMenu(const char * const *items, uint8_t count, uint8_t selected);
     void drawPointing();
     void drawStub(const char *label);
+    void drawTargetIcon(LdShape shape);
     void logEncoderDiag(int delta, bool shortPress, bool longPress);
 
     // ---- Action ----
@@ -78,9 +90,9 @@ class LocalDisplay {
     bool        _ready      = false;
 
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
-    volatile int  _encDelta     = 0;
-    uint8_t       _lastClkState = HIGH;  // previous CLK level for edge detection
-    uint32_t      _encLastStepUs = 0;    // software debounce for encoder steps
+    volatile int  _encDelta      = 0;
+    uint8_t       _lastClkState  = HIGH;
+    uint32_t      _encLastStepUs = 0;    // micros-based debounce for encoder steps
 
     // ---- Button state ----
     uint32_t _btnPressTime = 0;
@@ -93,16 +105,22 @@ class LocalDisplay {
     static constexpr uint32_t ENC_DEBOUNCE_US   = 1500;
     static constexpr uint16_t ENCODER_DIAG_MS   = 2000;
 
-    // ---- Encoder diagnostics ----
-    uint32_t _encDiagLastMs      = 0;
-    uint32_t _encPollCount       = 0;
-    uint32_t _encClkChangeCount  = 0;
-    uint32_t _encFallCount       = 0;
-    uint32_t _encDebounceDrop    = 0;
-    uint32_t _encStepCwCount     = 0;
-    uint32_t _encStepCcwCount    = 0;
-    uint32_t _btnShortCount      = 0;
-    uint32_t _btnLongCount       = 0;
+    // ---- Encoder diagnostics (always-on via V macros in VERBOSE mode) ----
+    uint32_t _encDiagLastMs     = 0;
+    uint32_t _encPollCount      = 0;
+    uint32_t _encClkChangeCount = 0;
+    uint32_t _encFallCount      = 0;
+    uint32_t _encDebounceDrop   = 0;
+    uint32_t _encStepCwCount    = 0;
+    uint32_t _encStepCcwCount   = 0;
+    uint32_t _btnShortCount     = 0;
+    uint32_t _btnLongCount      = 0;
+
+    // ---- Button debug (active when LOCAL_DISPLAY_DEBUG is defined) ----
+    #ifdef LOCAL_DISPLAY_DEBUG
+      uint8_t  _dbgBtnRaw      = HIGH;
+      uint16_t _dbgBounceCount = 0;
+    #endif
 };
 
 // Single global instance
