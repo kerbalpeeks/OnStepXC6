@@ -123,16 +123,16 @@ void setup() {
 
   // start telescope object
   telescope.init(FirmwareName, FirmwareVersionMajor, FirmwareVersionMinor, FirmwareVersionPatch, FirmwareVersionConfig);
-
-  // start command channel tasks
-  commandChannelInit();
-
-  tasks.yield(2000);
-
+  
   // start local display (SSD1306 + encoder), if configured
   #ifdef LOCAL_DISPLAY_PRESENT
     localDisplay.init();
   #endif
+  
+  // start command channel tasks
+  commandChannelInit();
+
+  tasks.yield(2000);
 
   // start any plugins
   #if PLUGIN1 != OFF
