@@ -19,7 +19,7 @@
 // runs (the DS3231 driver does this). LocalDisplay does NOT call Wire.begin() to
 // avoid double-initialising the ESP-IDF I2C driver (causes ESP_ERR_INVALID_STATE).
 //
-// Button debug: add  #define LOCAL_DISPLAY_DEBUG  in Config.h to enable
+// Button debug: set  #define LOCAL_DISPLAY_DEBUG  ON  in Config.h to enable
 // Serial.printf logging of raw pin transitions and press/release events.
 //
 // Required Arduino library: U8g2 (by olikraus, install via Library Manager).
@@ -134,7 +134,7 @@ class LocalDisplay {
     uint32_t _btnLongCount      = 0;
 
     // ---- Button debug (active when LOCAL_DISPLAY_DEBUG is defined) ----
-    #ifdef LOCAL_DISPLAY_DEBUG
+    #if LOCAL_DISPLAY_DEBUG == ON
       uint8_t  _dbgBtnRaw      = HIGH;
       uint16_t _dbgBounceCount = 0;
     #endif
