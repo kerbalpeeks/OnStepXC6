@@ -27,55 +27,54 @@ struct LdTarget {
   void (*getPos)(double jd, double *ra, double *dec);
 };
 
-// \xc2\xb1 = UTF-8 for ± (U+00B1); rendered via drawUTF8 in drawPointing
 static const LdTarget _targets[] = {
   {
     "Moon",
-    { "Dist:\xc2\xb1384,400km", "Diam:    3,475km", "Gravity:   0.17g" },
+    { "Dist: ~384,400km", "Diam:    3,475km", "Gravity:   0.17g" },
     SHAPE_MOON,
     Astronomy::moon
   },
   {
-    "Mercury",
-    { "Dist:  \xc2\xb177M km", "Diam:    4,879km", "Gravity:   0.38g" },
-    SHAPE_MERCURY,
-    Astronomy::mercury
-  },
-  {
     "Venus",
-    { "Dist: \xc2\xb1108M km", "Diam:   12,104km", "Gravity:   0.90g" },
+    { "Dist:   ~108M km", "Diam:   12,104km", "Gravity:   0.90g" },
     SHAPE_VENUS,
     Astronomy::venus
   },
   {
     "Mars",
-    { "Dist: \xc2\xb1228M km", "Diam:    6,779km", "Gravity:   0.38g" },
+    { "Dist:   ~228M km", "Diam:    6,779km", "Gravity:   0.38g" },
     SHAPE_MARS,
     Astronomy::mars
   },
   {
     "Jupiter",
-    { "Dist:  \xc2\xb15.2 AU", "Diam:  139,820km", "Gravity:   2.53g" },
+    { "Dist:    ~5.2 AU", "Diam:  139,820km", "Gravity:   2.53g" },
     SHAPE_JUPITER,
     Astronomy::jupiter
   },
   {
     "Saturn",
-    { "Dist:  \xc2\xb19.5 AU", "Diam:  116,460km", "Gravity:   1.07g" },
+    { "Dist:    ~9.5 AU", "Diam:  116,460km", "Gravity:   1.07g" },
     SHAPE_SATURN,
     Astronomy::saturn
   },
   {
     "Uranus",
-    { "Dist: \xc2\xb119.2 AU", "Diam:   50,724km", "Gravity:   0.89g" },
+    { "Dist:   ~19.2 AU", "Diam:   50,724km", "Gravity:   0.89g" },
     SHAPE_URANUS,
     Astronomy::uranus
   },
   {
     "Neptune",
-    { "Dist: \xc2\xb130.1 AU", "Diam:   49,244km", "Gravity:   1.14g" },
+    { "Dist:   ~30.1 AU", "Diam:   49,244km", "Gravity:   1.14g" },
     SHAPE_NEPTUNE,
     Astronomy::neptune
+  },
+  {
+    "Mercury",
+    { "Dist:    ~77M km", "Diam:    4,879km", "Gravity:   0.38g" },
+    SHAPE_MERCURY,
+    Astronomy::mercury
   },
 };
 static constexpr uint8_t NUM_TARGETS = sizeof(_targets) / sizeof(_targets[0]);
@@ -522,11 +521,11 @@ void LocalDisplay::drawPointing() {
   drawHeader(tgt.name);
   drawTargetIcon(tgt.shape);
 
-  // Facts (right panel x=44) — drawUTF8 to render ± correctly
+  // Facts (right panel x=44)
   _u8g2.setFont(u8g2_font_5x7_tf);
-  _u8g2.drawUTF8(44, 24, tgt.fact[0]);
-  _u8g2.drawUTF8(44, 35, tgt.fact[1]);
-  _u8g2.drawUTF8(44, 46, tgt.fact[2]);
+  _u8g2.drawStr(44, 24, tgt.fact[0]);
+  _u8g2.drawStr(44, 35, tgt.fact[1]);
+  _u8g2.drawStr(44, 46, tgt.fact[2]);
 
   // Slew bar — indeterminate bouncing segment
   if (slewing) {
@@ -536,22 +535,6 @@ void LocalDisplay::drawPointing() {
     _u8g2.drawFrame(0, 57, 128, 7);
     _u8g2.drawBox(_barPos, 58, 30, 5);
   }
-}
-
-// ---------------------------------------------------------------------------
-// drawModal — "Move to X?" overlay on top of the pointing screen
-
-void LocalDisplay::drawModal() {
-  // Clear a box and draw a framed dialog
-  _u8g2.setDrawColor(0);
-  _u8g2.drawBox(4, 16, 120, 44);
-  _u8g2.setDrawColor(1);
-  _u8g2.drawFrame(4, 16, 120, 44);
-  _u8g2.setFont(u8g2_font_6x10_tf);
-  _u8g2.drawStr(10, 28, "Move to:");
-  _u8g2.drawStr(10, 42, _targets[_modalSel].name);
-  _u8g2.setFont(u8g2_font_5x7_tf);
-  _u8g2.drawStr(10, 56, "OK=press  cancel=hold");
 }
 
 // ---------------------------------------------------------------------------
@@ -596,71 +579,41 @@ void LocalDisplay::goToTarget(uint8_t idx) {
 }
 
 // ---------------------------------------------------------------------------
-// earlyInit() — called right after WIRE_INIT in setup(), before telescope.init().
-// Shows a "Starting..." screen immediately so the user gets visual feedback.
-
-void LocalDisplay::earlyInit() {
-  Wire.beginTransmission(LOCAL_DISPLAY_I2C_ADDR);
-  if (Wire.endTransmission() != 0) return;  // no display, stay silent
-
-  if (!_u8g2.begin()) return;
-  _u8g2.setContrast(200);
-  _earlyInitDone = true;
-
-  _u8g2.firstPage();
-  do {
-    _u8g2.setFont(u8g2_font_6x10_tf);
-    _u8g2.drawStr(0, 9, "OnStep Pointer");
-    _u8g2.drawHLine(0, 11, 128);
-    _u8g2.drawXBM(44, 14, 40, 40, earth_bits);
-    _u8g2.drawStr(4, 60, "Starting...");
-  } while (_u8g2.nextPage());
-}
-
-// ---------------------------------------------------------------------------
 // init()
 
 void LocalDisplay::init() {
-  if (!_earlyInitDone) {
-    // earlyInit was not called (or display absent) — probe and init now.
-    // Wire was already initialised by DS3231 during telescope.init().
-    // A second Wire.begin() on ESP32 v3.x tears down the ESP-IDF I2C driver.
-    Wire.beginTransmission(LOCAL_DISPLAY_I2C_ADDR);
-    if (Wire.endTransmission() != 0) {
-      DLF("WRN: LocalDisplay, SSD1306 not found on I2C - display disabled");
-      return;
-    }
-    if (!_u8g2.begin()) {
-      DLF("ERR: LocalDisplay, SSD1306 init failed");
-      return;
-    }
-    _u8g2.setContrast(200);
+  // Wire was already initialised by DS3231 during telescope.init().
+  // A second Wire.begin() on ESP32 v3.x tears down the ESP-IDF I2C driver
+  // and leaves it in ESP_ERR_INVALID_STATE. Do NOT call Wire.begin() here.
+
+  // Probe SSD1306 before initialising U8g2 — a missing display must not
+  // corrupt the shared I2C bus used by the DS3231 clock.
+  Wire.beginTransmission(LOCAL_DISPLAY_I2C_ADDR);
+  if (Wire.endTransmission() != 0) {
+    DLF("WRN: LocalDisplay, SSD1306 not found on I2C - display disabled");
+    return;
   }
 
-  // Splash screen: show site lat/lon in DMS for 2 seconds
-  // \xc2\xb0 = UTF-8 for ° (U+00B0)
+  if (!_u8g2.begin()) {
+    DLF("ERR: LocalDisplay, SSD1306 init failed");
+    return;
+  }
+  _u8g2.setContrast(200);
+
+  // Splash screen: show version + site lat/lon for 2 seconds
   {
-    auto toDMS = [](double deg, char posHemi, char negHemi, char *buf, size_t sz) {
-      char hemi = (deg >= 0.0) ? posHemi : negHemi;
-      double a  = fabs(deg);
-      int    d  = (int)a;
-      double rm = (a - d) * 60.0;
-      int    m  = (int)rm;
-      int    s  = (int)round((rm - m) * 60.0);
-      if (s >= 60) { s = 0; m++; }
-      if (m >= 60) { m = 0; d++; }
-      snprintf(buf, sz, "%d\xc2\xb0%d'%d\"%c", d, m, s, hemi);
-    };
+    double latDeg = site.location.latitude  * 180.0 / M_PI;
+    double lonDeg = site.location.longitude * 180.0 / M_PI;
     char latBuf[20], lonBuf[20];
-    toDMS(site.location.latitude  * 180.0 / M_PI, 'N', 'S', latBuf, sizeof(latBuf));
-    toDMS(site.location.longitude * 180.0 / M_PI, 'E', 'W', lonBuf, sizeof(lonBuf));
+    snprintf(latBuf, sizeof(latBuf), "Lat: %+.6f", latDeg);
+    snprintf(lonBuf, sizeof(lonBuf), "Lon: %+.6f", lonDeg);
     _u8g2.firstPage();
     do {
       _u8g2.setFont(u8g2_font_6x10_tf);
       _u8g2.drawStr(0, 12, "OnStep Pointer");
       _u8g2.drawHLine(0, 14, 128);
-      _u8g2.drawUTF8(0, 32, latBuf);
-      _u8g2.drawUTF8(0, 48, lonBuf);
+      _u8g2.drawStr(0, 32, latBuf);
+      _u8g2.drawStr(0, 48, lonBuf);
     } while (_u8g2.nextPage());
     delay(2000);
   }
@@ -705,15 +658,13 @@ void LocalDisplay::poll() {
   logEncoderDiag(delta, shortPress, longPress);
 
   // ---- Input handling per screen ----
-  // Wrap-around helper: moves sel by delta, wrapping at count boundaries
-  auto wrapSel = [](int sel, int delta, int count) -> uint8_t {
-    return (uint8_t)(((sel + delta) % count + count) % count);
-  };
-
   switch (_screen) {
 
     case SCR_MAIN_MENU:
-      if (delta != 0) _menuSel = wrapSel(_menuSel, delta, MAIN_COUNT);
+      if (delta != 0) {
+        int next = (int)_menuSel + delta;
+        _menuSel = (uint8_t)constrain(next, 0, (int)MAIN_COUNT - 1);
+      }
       if (shortPress) {
         switch (_menuSel) {
           case 0: _screen = SCR_MOVE_TO;                             break;
@@ -726,34 +677,24 @@ void LocalDisplay::poll() {
       break;
 
     case SCR_MOVE_TO:
-      if (delta != 0) _menuSel = wrapSel(_menuSel, delta, NUM_TARGETS);
+      if (delta != 0) {
+        int next = (int)_menuSel + delta;
+        _menuSel = (uint8_t)constrain(next, 0, (int)NUM_TARGETS - 1);
+      }
       if (shortPress) {
         goToTarget(_menuSel);
         _menuSel = 0;
       }
       if (longPress) {
         _screen  = SCR_MAIN_MENU;
-        _menuSel = 0;
+        _menuSel = 0;  // "Move to..." is at index 0
       }
       break;
 
     case SCR_POINTING:
-      if (_modalActive) {
-        if (delta != 0) _modalSel = wrapSel(_modalSel, delta, NUM_TARGETS);
-        if (shortPress) {
-          goToTarget(_modalSel);   // goToTarget resets _screen to SCR_POINTING
-          _modalActive = false;
-        }
-        if (longPress) _modalActive = false;
-      } else {
-        if (delta != 0) {
-          _modalActive = true;
-          _modalSel    = wrapSel(_targetIdx, delta, NUM_TARGETS);
-        }
-        if (shortPress || longPress) {
-          _screen  = SCR_MAIN_MENU;
-          _menuSel = 0;
-        }
+      if (shortPress || longPress) {
+        _screen  = SCR_MAIN_MENU;
+        _menuSel = 0;
       }
       break;
 
@@ -785,7 +726,6 @@ void LocalDisplay::poll() {
 
       case SCR_POINTING:
         drawPointing();
-        if (_modalActive) drawModal();
         break;
 
       case SCR_STUB:

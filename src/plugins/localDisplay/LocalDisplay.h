@@ -66,9 +66,6 @@ enum LdShape : uint8_t {
 
 class LocalDisplay {
   public:
-    // Call right after WIRE_INIT (before telescope.init) to show "Starting..." splash
-    void earlyInit();
-
     // Call once after telescope.init()
     void init();
 
@@ -83,7 +80,6 @@ class LocalDisplay {
     void drawHeader(const char *title);
     void drawMenu(const char * const *items, uint8_t count, uint8_t selected);
     void drawPointing();
-    void drawModal();
     void drawStub(const char *label);
     void drawTargetIcon(LdShape shape);
     void logEncoderDiag(int delta, bool shortPress, bool longPress);
@@ -92,19 +88,14 @@ class LocalDisplay {
     void goToTarget(uint8_t idx);
 
     // ---- Display state ----
-    LdScreen    _screen        = SCR_MAIN_MENU;
-    uint8_t     _menuSel       = 0;
-    uint8_t     _targetIdx     = 0;
-    bool        _wasSlewing    = false;
-    const char *_stubTitle     = "";
-    int8_t      _barPos        = 0;
-    int8_t      _barDir        = 1;
-    bool        _ready         = false;
-    bool        _earlyInitDone = false;
-
-    // ---- Modal dialog state (pointing screen body-switch) ----
-    bool    _modalActive = false;
-    uint8_t _modalSel    = 0;
+    LdScreen    _screen     = SCR_MAIN_MENU;
+    uint8_t     _menuSel    = 0;
+    uint8_t     _targetIdx  = 0;
+    bool        _wasSlewing = false;
+    const char *_stubTitle  = "";
+    int8_t      _barPos     = 0;
+    int8_t      _barDir     = 1;
+    bool        _ready      = false;
 
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta      = 0;
