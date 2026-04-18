@@ -98,6 +98,11 @@ void setup() {
   HAL_INIT();
   WIRE_INIT();
 
+  // Show "Starting..." on the OLED immediately — before the ~17s telescope.init() delay
+  #ifdef LOCAL_DISPLAY_PRESENT
+    localDisplay.earlyInit();
+  #endif
+
   analog.begin();
 
   nv().setGate(&xBusy);
