@@ -126,7 +126,7 @@ void LocalDisplay::pollEncoder() {
   // --- Button debounce ---
   bool pressed = (digitalRead(LOCAL_DISPLAY_ENCODER_BTN_PIN) == LOW);
 
-  #ifdef LOCAL_DISPLAY_DEBUG
+  #if LOCAL_DISPLAY_DEBUG == ON
     if ((uint8_t)pressed != _dbgBtnRaw) {
       Serial.printf("[BTN] pin %d -> %d\n", LOCAL_DISPLAY_ENCODER_BTN_PIN, (int)pressed);
       _dbgBtnRaw = (uint8_t)pressed;
@@ -136,12 +136,12 @@ void LocalDisplay::pollEncoder() {
   if (pressed && !_btnHeld) {
     if (_btnPressTime == 0) {
       _btnPressTime = millis();
-      #ifdef LOCAL_DISPLAY_DEBUG
+      #if LOCAL_DISPLAY_DEBUG == ON
         Serial.printf("[BTN] press start\n");
       #endif
     } else if (millis() - _btnPressTime > BTN_DEBOUNCE_MS) {
       _btnHeld = true;
-      #ifdef LOCAL_DISPLAY_DEBUG
+      #if LOCAL_DISPLAY_DEBUG == ON
         Serial.printf("[BTN] debounce confirmed\n");
       #endif
     }
@@ -151,12 +151,12 @@ void LocalDisplay::pollEncoder() {
     uint32_t held = millis() - _btnPressTime;
     if (held >= BTN_LONG_PRESS_MS) {
       _btnLong = true;
-      #ifdef LOCAL_DISPLAY_DEBUG
+      #if LOCAL_DISPLAY_DEBUG == ON
         Serial.printf("[BTN] LONG held=%lums\n", (unsigned long)held);
       #endif
     } else {
       _btnShort = true;
-      #ifdef LOCAL_DISPLAY_DEBUG
+      #if LOCAL_DISPLAY_DEBUG == ON
         Serial.printf("[BTN] SHORT held=%lums\n", (unsigned long)held);
       #endif
     }
@@ -166,7 +166,7 @@ void LocalDisplay::pollEncoder() {
 
   if (!pressed && !_btnHeld) {
     if (_btnPressTime != 0) {
-      #ifdef LOCAL_DISPLAY_DEBUG
+      #if LOCAL_DISPLAY_DEBUG == ON
         _dbgBounceCount++;
         Serial.printf("[BTN] bounce/abandon after %lums total=%u\n",
                       (unsigned long)(millis() - _btnPressTime), _dbgBounceCount);
@@ -192,7 +192,7 @@ static bool _consumeLong (volatile bool &flag) { bool v = flag; flag = false; re
 // logEncoderDiag — periodic encoder + button diagnostics (LOCAL_DISPLAY_DEBUG only)
 
 void LocalDisplay::logEncoderDiag(int delta, bool shortPress, bool longPress) {
-  #ifdef LOCAL_DISPLAY_DEBUG
+  #if LOCAL_DISPLAY_DEBUG == ON
     if (shortPress) _btnShortCount++;
     if (longPress)  _btnLongCount++;
 
@@ -675,7 +675,7 @@ void LocalDisplay::init() {
   pinMode(LOCAL_DISPLAY_ENCODER_BTN_PIN, INPUT_PULLUP);
   _lastClkState = (uint8_t)digitalRead(LOCAL_DISPLAY_ENCODER_CLK_PIN);
 
-  #ifdef LOCAL_DISPLAY_DEBUG
+  #if LOCAL_DISPLAY_DEBUG == ON
     Serial.printf("[LocalDisplay] BTN=%d CLK=%d DT=%d\n",
                   LOCAL_DISPLAY_ENCODER_BTN_PIN,
                   LOCAL_DISPLAY_ENCODER_CLK_PIN,
