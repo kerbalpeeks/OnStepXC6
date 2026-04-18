@@ -75,11 +75,11 @@ void Mount::begin() {
   // initialize the critical subsystems
   site.init();
 
-  // always apply mount type from Config.h — NV value may be stale from a previous build
-  if (settings.mountType != MOUNT_SUBTYPE) {
+  // invalid mount type, set default
+  if (settings.mountType < MOUNT_SUBTYPE_FIRST || settings.mountType > MOUNT_SUBTYPE_LAST) {
     settings.mountType = MOUNT_SUBTYPE;
     nv().kv().put(nvKey, settings);
-    VLF("MSG: Mount, apply mount type from Config");
+    VLF("MSG: Transform, revert mount type to default");
   }
 
   if (MOUNT_TYPE == ALTALT) settings.mountType = MOUNT_SUBTYPE;
