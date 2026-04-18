@@ -181,6 +181,72 @@ void WifiManager::readSettings() {
       snprintf(keyStr, sizeof(keyStr), "WIFI_STATION%u_PWD", i);
       if (!nv().kv().getOrInit(keyStr, stationPassword[i - 1])) { DF("WRN: Nv, init failed for "); DL(keyStr); }
     }
+
+    // Always apply compile-time credentials (from Config.h / Secrets.h) so that
+    // changes there take effect immediately, regardless of what NV has stored.
+    // Other settings (IP, DHCP, channel) are preserved from NV.
+    static const char kSsid[WifiStationCount][33] = {
+      #if WifiStationCount > 0
+        STA1_SSID,
+      #endif
+      #if WifiStationCount > 1
+        STA2_SSID,
+      #endif
+      #if WifiStationCount > 2
+        STA3_SSID,
+      #endif
+      #if WifiStationCount > 3
+        STA4_SSID,
+      #endif
+      #if WifiStationCount > 4
+        STA5_SSID,
+      #endif
+      #if WifiStationCount > 5
+        STA6_SSID,
+      #endif
+    };
+    static const char kPwd[WifiStationCount][64] = {
+      #if WifiStationCount > 0
+        STA1_PASSWORD,
+      #endif
+      #if WifiStationCount > 1
+        STA2_PASSWORD,
+      #endif
+      #if WifiStationCount > 2
+        STA3_PASSWORD,
+      #endif
+      #if WifiStationCount > 3
+        STA4_PASSWORD,
+      #endif
+      #if WifiStationCount > 4
+        STA5_PASSWORD,
+      #endif
+      #if WifiStationCount > 5
+        STA6_PASSWORD,
+      #endif
+    };
+    for (uint8_t i = 0; i < WifiStationCount; i++) {
+      if (kSsid[i][0] == '\0') continue;  // skip unconfigured station slots
+      bool changed = false;
+      if (strncmp(station[i].ssid, kSsid[i], sizeof(station[i].ssid)) != 0) {
+        strncpy(station[i].ssid, kSsid[i], sizeof(station[i].ssid) - 1);
+        station[i].ssid[sizeof(station[i].ssid) - 1] = '\0';
+        changed = true;
+      }
+      if (strncmp(stationPassword[i].password, kPwd[i], sizeof(stationPassword[i].password)) != 0) {
+        strncpy(stationPassword[i].password, kPwd[i], sizeof(stationPassword[i].password) - 1);
+        stationPassword[i].password[sizeof(stationPassword[i].password) - 1] = '\0';
+        changed = true;
+      }
+      if (changed) {
+        char keyStr[24];
+        snprintf(keyStr, sizeof(keyStr), "WIFI_STATION%u", i + 1);
+        nv().kv().put(keyStr, station[i]);
+        snprintf(keyStr, sizeof(keyStr), "WIFI_STATION%u_PWD", i + 1);
+        nv().kv().put(keyStr, stationPassword[i]);
+        VF("MSG: WifiManager, applied compile-time credentials for station "); VL(i + 1);
+      }
+    }
   #endif
 
   #if DEBUG != OFF
