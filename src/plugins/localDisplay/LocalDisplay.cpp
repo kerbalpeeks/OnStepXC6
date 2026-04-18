@@ -27,53 +27,53 @@ struct LdTarget {
   void (*getPos)(double jd, double *ra, double *dec);
 };
 
-// \xb1 = UTF-8 for ± (U+00B1); rendered via drawUTF8 in drawPointing
+// \xc2\xb1 = UTF-8 for ± (U+00B1); rendered via drawUTF8 in drawPointing
 static const LdTarget _targets[] = {
   {
     "Moon",
-    { "Dist:\xb1384,400km", "Diam:    3,475km", "Gravity:   0.17g" },
+    { "Dist:\xc2\xb1384,400km", "Diam:    3,475km", "Gravity:   0.17g" },
     SHAPE_MOON,
     Astronomy::moon
   },
   {
     "Mercury",
-    { "Dist:  \xb177M km", "Diam:    4,879km", "Gravity:   0.38g" },
+    { "Dist:  \xc2\xb177M km", "Diam:    4,879km", "Gravity:   0.38g" },
     SHAPE_MERCURY,
     Astronomy::mercury
   },
   {
     "Venus",
-    { "Dist: \xb1108M km", "Diam:   12,104km", "Gravity:   0.90g" },
+    { "Dist: \xc2\xb1108M km", "Diam:   12,104km", "Gravity:   0.90g" },
     SHAPE_VENUS,
     Astronomy::venus
   },
   {
     "Mars",
-    { "Dist: \xb1228M km", "Diam:    6,779km", "Gravity:   0.38g" },
+    { "Dist: \xc2\xb1228M km", "Diam:    6,779km", "Gravity:   0.38g" },
     SHAPE_MARS,
     Astronomy::mars
   },
   {
     "Jupiter",
-    { "Dist:  \xb15.2 AU", "Diam:  139,820km", "Gravity:   2.53g" },
+    { "Dist:  \xc2\xb15.2 AU", "Diam:  139,820km", "Gravity:   2.53g" },
     SHAPE_JUPITER,
     Astronomy::jupiter
   },
   {
     "Saturn",
-    { "Dist:  \xb19.5 AU", "Diam:  116,460km", "Gravity:   1.07g" },
+    { "Dist:  \xc2\xb19.5 AU", "Diam:  116,460km", "Gravity:   1.07g" },
     SHAPE_SATURN,
     Astronomy::saturn
   },
   {
     "Uranus",
-    { "Dist: \xb119.2 AU", "Diam:   50,724km", "Gravity:   0.89g" },
+    { "Dist: \xc2\xb119.2 AU", "Diam:   50,724km", "Gravity:   0.89g" },
     SHAPE_URANUS,
     Astronomy::uranus
   },
   {
     "Neptune",
-    { "Dist: \xb130.1 AU", "Diam:   49,244km", "Gravity:   1.14g" },
+    { "Dist: \xc2\xb130.1 AU", "Diam:   49,244km", "Gravity:   1.14g" },
     SHAPE_NEPTUNE,
     Astronomy::neptune
   },
@@ -522,11 +522,11 @@ void LocalDisplay::drawPointing() {
   drawHeader(tgt.name);
   drawTargetIcon(tgt.shape);
 
-  // Facts (right panel x=44); \xb1 = Latin-1 ±, rendered via drawStr
+  // Facts (right panel x=44) — drawUTF8 to render ± correctly
   _u8g2.setFont(u8g2_font_5x7_tf);
-  _u8g2.drawStr(44, 24, tgt.fact[0]);
-  _u8g2.drawStr(44, 35, tgt.fact[1]);
-  _u8g2.drawStr(44, 46, tgt.fact[2]);
+  _u8g2.drawUTF8(44, 24, tgt.fact[0]);
+  _u8g2.drawUTF8(44, 35, tgt.fact[1]);
+  _u8g2.drawUTF8(44, 46, tgt.fact[2]);
 
   // Slew bar — indeterminate bouncing segment
   if (slewing) {
@@ -638,7 +638,7 @@ void LocalDisplay::init() {
   }
 
   // Splash screen: show site lat/lon in DMS for 2 seconds
-  // \xb0 = UTF-8 for ° (U+00B0)
+  // \xc2\xb0 = UTF-8 for ° (U+00B0)
   {
     auto toDMS = [](double deg, char posHemi, char negHemi, char *buf, size_t sz) {
       char hemi = (deg >= 0.0) ? posHemi : negHemi;
@@ -649,7 +649,7 @@ void LocalDisplay::init() {
       int    s  = (int)round((rm - m) * 60.0);
       if (s >= 60) { s = 0; m++; }
       if (m >= 60) { m = 0; d++; }
-      snprintf(buf, sz, "%d\xb0%d'%d\"%c", d, m, s, hemi);
+      snprintf(buf, sz, "%d\xc2\xb0%d'%d\"%c", d, m, s, hemi);
     };
     char latBuf[20], lonBuf[20];
     toDMS(site.location.latitude  * 180.0 / M_PI, 'N', 'S', latBuf, sizeof(latBuf));
@@ -659,8 +659,8 @@ void LocalDisplay::init() {
       _u8g2.setFont(u8g2_font_6x10_tf);
       _u8g2.drawStr(0, 12, "OnStep Pointer");
       _u8g2.drawHLine(0, 14, 128);
-      _u8g2.drawStr(0, 32, latBuf);
-      _u8g2.drawStr(0, 48, lonBuf);
+      _u8g2.drawUTF8(0, 32, latBuf);
+      _u8g2.drawUTF8(0, 48, lonBuf);
     } while (_u8g2.nextPage());
     delay(2000);
   }
@@ -705,13 +705,13 @@ void LocalDisplay::poll() {
   logEncoderDiag(delta, shortPress, longPress);
 
   // ---- Input handling per screen ----
+  // Wrap-around helper: (sel+d+N*bigMultiple) % N is always positive
+  #define WRAP(sel, d, N) ((uint8_t)(((int)(sel) + (d) % (int)(N) + (int)(N) * 16) % (int)(N)))
+
   switch (_screen) {
 
     case SCR_MAIN_MENU:
-      if (delta != 0) {
-        int next = (int)_menuSel + delta;
-        _menuSel = (uint8_t)constrain(next, 0, (int)MAIN_COUNT - 1);
-      }
+      if (delta != 0) _menuSel = WRAP(_menuSel, delta, MAIN_COUNT);
       if (shortPress) {
         switch (_menuSel) {
           case 0: _screen = SCR_MOVE_TO;                             break;
@@ -724,10 +724,7 @@ void LocalDisplay::poll() {
       break;
 
     case SCR_MOVE_TO:
-      if (delta != 0) {
-        int next = (int)_menuSel + delta;
-        _menuSel = (uint8_t)constrain(next, 0, (int)NUM_TARGETS - 1);
-      }
+      if (delta != 0) _menuSel = WRAP(_menuSel, delta, NUM_TARGETS);
       if (shortPress) {
         goToTarget(_menuSel);
         _menuSel = 0;
@@ -740,10 +737,7 @@ void LocalDisplay::poll() {
 
     case SCR_POINTING:
       if (_modalActive) {
-        if (delta != 0) {
-          int next = (int)_modalSel + delta;
-          _modalSel = (uint8_t)constrain(next, 0, (int)NUM_TARGETS - 1);
-        }
+        if (delta != 0) _modalSel = WRAP(_modalSel, delta, NUM_TARGETS);
         if (shortPress) {
           goToTarget(_modalSel);
           _modalActive = false;
@@ -752,8 +746,7 @@ void LocalDisplay::poll() {
       } else {
         if (delta != 0) {
           _modalActive = true;
-          int next = (int)_targetIdx + delta;
-          _modalSel = (uint8_t)constrain(next, 0, (int)NUM_TARGETS - 1);
+          _modalSel    = WRAP(_targetIdx, delta, NUM_TARGETS);
         }
         if (shortPress || longPress) {
           _screen  = SCR_MAIN_MENU;
