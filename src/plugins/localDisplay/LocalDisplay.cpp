@@ -31,49 +31,49 @@ struct LdTarget {
 static const LdTarget _targets[] = {
   {
     "Moon",
-    { "Dist:\xc2\xb1384,400km", "Diam:    3,475km", "Gravity:   0.17g" },
+    { "Dist: \u00b1384,400km", "Diam:    3,475km", "Gravity:   0.17g" },
     SHAPE_MOON,
     Astronomy::moon
   },
   {
     "Mercury",
-    { "Dist:  \xc2\xb177M km", "Diam:    4,879km", "Gravity:   0.38g" },
+    { "Dist:  \u00b1 177M km", "Diam:    4,879km", "Gravity:   0.38g" },
     SHAPE_MERCURY,
     Astronomy::mercury
   },
   {
     "Venus",
-    { "Dist: \xc2\xb1108M km", "Diam:   12,104km", "Gravity:   0.90g" },
+    { "Dist: \u00b1 108M km", "Diam:   12,104km", "Gravity:   0.90g" },
     SHAPE_VENUS,
     Astronomy::venus
   },
   {
     "Mars",
-    { "Dist: \xc2\xb1228M km", "Diam:    6,779km", "Gravity:   0.38g" },
+    { "Dist: \u00b1 228M km", "Diam:    6,779km", "Gravity:   0.38g" },
     SHAPE_MARS,
     Astronomy::mars
   },
   {
     "Jupiter",
-    { "Dist:  \xc2\xb15.2 AU", "Diam:  139,820km", "Gravity:   2.53g" },
+    { "Dist:  \u00b1 15.2 AU", "Diam:  139,820km", "Gravity:   2.53g" },
     SHAPE_JUPITER,
     Astronomy::jupiter
   },
   {
     "Saturn",
-    { "Dist:  \xc2\xb19.5 AU", "Diam:  116,460km", "Gravity:   1.07g" },
+    { "Dist:  \u00b1 19.5 AU", "Diam:  116,460km", "Gravity:   1.07g" },
     SHAPE_SATURN,
     Astronomy::saturn
   },
   {
     "Uranus",
-    { "Dist: \xc2\xb119.2 AU", "Diam:   50,724km", "Gravity:   0.89g" },
+    { "Dist: \u00b1 119.2 AU", "Diam:   50,724km", "Gravity:   0.89g" },
     SHAPE_URANUS,
     Astronomy::uranus
   },
   {
     "Neptune",
-    { "Dist: \xc2\xb130.1 AU", "Diam:   49,244km", "Gravity:   1.14g" },
+    { "Dist: \u00b1 130.1 AU", "Diam:   49,244km", "Gravity:   1.14g" },
     SHAPE_NEPTUNE,
     Astronomy::neptune
   },
