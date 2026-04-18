@@ -522,11 +522,11 @@ void LocalDisplay::drawPointing() {
   drawHeader(tgt.name);
   drawTargetIcon(tgt.shape);
 
-  // Facts (right panel x=44); literal UTF-8 ± decoded via drawUTF8
+  // Facts (right panel x=44); \xb1 = Latin-1 ±, rendered via drawStr
   _u8g2.setFont(u8g2_font_5x7_tf);
-  _u8g2.drawUTF8(44, 24, tgt.fact[0]);
-  _u8g2.drawUTF8(44, 35, tgt.fact[1]);
-  _u8g2.drawUTF8(44, 46, tgt.fact[2]);
+  _u8g2.drawStr(44, 24, tgt.fact[0]);
+  _u8g2.drawStr(44, 35, tgt.fact[1]);
+  _u8g2.drawStr(44, 46, tgt.fact[2]);
 
   // Slew bar — indeterminate bouncing segment
   if (slewing) {
