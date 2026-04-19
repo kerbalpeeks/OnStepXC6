@@ -43,7 +43,11 @@ enum LdScreen : uint8_t {
   SCR_MAIN_MENU = 0,
   SCR_MOVE_TO,
   SCR_POINTING,
-  SCR_STUB        // placeholder for Settings / How to use / Factory reset
+  SCR_STUB,            // placeholder for How to use / Factory reset
+  SCR_SETTINGS,        // settings sub-menu
+  SCR_LOC_LIST,        // list of 3 favourite locations
+  SCR_LOC_EDIT,        // field-by-field location editor
+  SCR_DATETIME_EDIT    // field-by-field date/time editor
 };
 
 // Icon shape for each target's pointing screen
@@ -86,10 +90,19 @@ class LocalDisplay {
     void drawModal();
     void drawStub(const char *label);
     void drawTargetIcon(LdShape shape);
+    void drawSettings();
+    void drawLocList();
+    void drawLocEdit();
+    void drawDateTimeEdit();
+    void drawField(const char *str, int16_t x, int16_t y, bool active);
     void logEncoderDiag(int delta, bool shortPress, bool longPress);
 
-    // ---- Action ----
+    // ---- Actions ----
     void goToTarget(uint8_t idx);
+    void enterLocEdit(uint8_t siteIdx);
+    void saveLocEdit();
+    void enterDateTimeEdit();
+    void saveDateTimeEdit();
 
     // ---- Display state ----
     LdScreen    _screen        = SCR_MAIN_MENU;
@@ -105,6 +118,14 @@ class LocalDisplay {
     // ---- Modal dialog state (pointing screen body-switch) ----
     bool    _modalActive = false;
     uint8_t _modalSel    = 0;
+
+    // ---- Settings / location-edit state ----
+    uint8_t _activeSiteIdx = 0;        // which of sites 0-2 is currently active
+    uint8_t _editSiteIdx   = 0;        // site being edited in SCR_LOC_EDIT
+    uint8_t _editField     = 0;        // current field index in edit screens
+    int16_t _locFields[9]  = {};       // lat d/m/s/hemi, lon d/m/s/hemi, tz
+    int16_t _dtFields[5]   = {};       // hour, minute, day, month, year
+    char    _siteNames[3][16] = {};    // cached names for SCR_LOC_LIST
 
     // ---- Encoder polling state (written by pollEncoder, read by poll) ----
     volatile int  _encDelta      = 0;
