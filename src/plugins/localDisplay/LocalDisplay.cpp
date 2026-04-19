@@ -7,6 +7,7 @@
 
 #include "Astronomy.h"
 #include "../../lib/calendars/Calendars.h"
+#include "../../lib/nv/Nv.h"
 
 // SSD1306 default I2C address (0x3C, or 0x3D with SA0 tied HIGH)
 #ifndef LOCAL_DISPLAY_I2C_ADDR
@@ -569,6 +570,254 @@ void LocalDisplay::drawStub(const char *label) {
 }
 
 // ---------------------------------------------------------------------------
+// Settings sub-menu items
+
+static const char * const _settingsItems[] = { "Locations", "Date & Time", "Back" };
+static constexpr uint8_t SETTINGS_COUNT = 3;
+
+// ---------------------------------------------------------------------------
+// drawField — render a value string with highlight if active (5×7 font assumed)
+
+void LocalDisplay::drawField(const char *str, int16_t x, int16_t y, bool active) {
+  int16_t w = (int16_t)_u8g2.getStrWidth(str) + 2;
+  if (active) {
+    _u8g2.setDrawColor(1);
+    _u8g2.drawBox(x - 1, y - 7, w, 9);
+    _u8g2.setDrawColor(0);
+    _u8g2.drawStr(x, y, str);
+    _u8g2.setDrawColor(1);
+  } else {
+    _u8g2.drawStr(x, y, str);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// enterLocEdit — load site siteIdx into _locFields (DMS) for editing
+
+void LocalDisplay::enterLocEdit(uint8_t siteIdx) {
+  _editSiteIdx = siteIdx;
+  _editField   = 0;
+
+  Location loc = {};
+  if (siteIdx == _activeSiteIdx) {
+    loc = site.location;
+  } else {
+    char key[24];
+    snprintf(key, sizeof(key), "LOCATION%u_SETTINGS", siteIdx);
+    nv().kv().getOrInit(key, loc);
+  }
+
+  auto toFields = [](double radians, int16_t *flds, int maxDeg) {
+    double deg = fabs(radians * 180.0 / M_PI);
+    int d = (int)deg;
+    double rm = (deg - d) * 60.0;
+    int m = (int)rm;
+    int s = (int)round((rm - m) * 60.0);
+    if (s >= 60) { s = 0; m++; }
+    if (m >= 60) { m = 0; d++; }
+    if (d > maxDeg) d = maxDeg;
+    flds[0] = d; flds[1] = m; flds[2] = s;
+  };
+
+  toFields(loc.latitude,  _locFields,     90);
+  _locFields[3] = (loc.latitude  < 0) ? 1 : 0;  // 0=N, 1=S
+  toFields(loc.longitude, _locFields + 4, 180);
+  _locFields[7] = (loc.longitude < 0) ? 1 : 0;  // 0=E, 1=W
+  _locFields[8] = (int16_t)round(loc.timezone);
+}
+
+// ---------------------------------------------------------------------------
+// saveLocEdit — write _locFields back to NV and apply if active site
+
+void LocalDisplay::saveLocEdit() {
+  Location loc = {};
+  if (_editSiteIdx == _activeSiteIdx) {
+    loc = site.location;
+  } else {
+    char key[24];
+    snprintf(key, sizeof(key), "LOCATION%u_SETTINGS", _editSiteIdx);
+    nv().kv().getOrInit(key, loc);
+  }
+
+  double latDeg = _locFields[0] + _locFields[1] / 60.0 + _locFields[2] / 3600.0;
+  if (_locFields[3] == 1) latDeg = -latDeg;
+  double lonDeg = _locFields[4] + _locFields[5] / 60.0 + _locFields[6] / 3600.0;
+  if (_locFields[7] == 1) lonDeg = -lonDeg;
+
+  loc.latitude  = latDeg * M_PI / 180.0;
+  loc.longitude = lonDeg * M_PI / 180.0;
+  loc.timezone  = (float)_locFields[8];
+
+  char key[24];
+  snprintf(key, sizeof(key), "LOCATION%u_SETTINGS", _editSiteIdx);
+  nv().kv().put(key, loc);
+  VF("MSG: LocalDisplay, saved location "); VL(_editSiteIdx);
+
+  if (_editSiteIdx == _activeSiteIdx) {
+    site.location = loc;
+    site.updateLocation();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// enterDateTimeEdit — populate _dtFields from current site time (local)
+
+void LocalDisplay::enterDateTimeEdit() {
+  _editField = 0;
+  if (site.isDateTimeReady()) {
+    JulianDate jd       = site.getDateTime();
+    GregorianDate greg  = calendars.julianDayToGregorian(jd);
+    double localHour    = greg.hour - site.location.timezone;
+    while (localHour >= 24.0) localHour -= 24.0;
+    while (localHour <   0.0) localHour += 24.0;
+    _dtFields[0] = (int16_t)localHour;
+    _dtFields[1] = (int16_t)((localHour - _dtFields[0]) * 60.0);
+    _dtFields[2] = greg.day;
+    _dtFields[3] = greg.month;
+    _dtFields[4] = greg.year;
+  } else {
+    _dtFields[0] = 12; _dtFields[1] = 0;
+    _dtFields[2] = 1;  _dtFields[3] = 1; _dtFields[4] = 2024;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// saveDateTimeEdit — build JulianDate from _dtFields and apply
+
+void LocalDisplay::saveDateTimeEdit() {
+  GregorianDate greg;
+  greg.year  = _dtFields[4];
+  greg.month = (uint8_t)_dtFields[3];
+  greg.day   = (uint8_t)_dtFields[2];
+  greg.hour  = _dtFields[0] + _dtFields[1] / 60.0 + site.location.timezone;
+  while (greg.hour >= 24.0) greg.hour -= 24.0;
+  while (greg.hour <   0.0) greg.hour += 24.0;
+  JulianDate jd = calendars.gregorianToJulianDay(greg);
+  site.setDateTime(jd);
+}
+
+// ---------------------------------------------------------------------------
+// drawSettings — top-level settings sub-menu
+
+void LocalDisplay::drawSettings() {
+  drawHeader("Settings");
+  drawMenu(_settingsItems, SETTINGS_COUNT, _menuSel);
+}
+
+// ---------------------------------------------------------------------------
+// drawLocList — list of 3 favourite sites + Back
+
+void LocalDisplay::drawLocList() {
+  drawHeader("Locations");
+  _u8g2.setFont(u8g2_font_6x10_tf);
+  for (uint8_t i = 0; i < 3; i++) {
+    int y = 22 + (int)i * 12;
+    _u8g2.drawStr(0, y, (i == _activeSiteIdx) ? "*" : " ");
+    _u8g2.drawStr(8, y, (i == _menuSel) ? ">" : " ");
+    _u8g2.drawStr(16, y, _siteNames[i][0] ? _siteNames[i] : "---");
+  }
+  int y = 22 + 3 * 12;
+  _u8g2.drawStr(8, y, (_menuSel == 3) ? ">" : " ");
+  _u8g2.drawStr(16, y, "Back");
+  _u8g2.setFont(u8g2_font_5x7_tf);
+  _u8g2.drawStr(0, 62, "hold=edit loc");
+}
+
+// ---------------------------------------------------------------------------
+// drawLocEdit — field-by-field lat/lon/tz editor
+// Fields: 0=lat-d 1=lat-m 2=lat-s 3=lat-NS 4=lon-d 5=lon-m 6=lon-s 7=lon-EW 8=tz 9=Save
+
+void LocalDisplay::drawLocEdit() {
+  char siteName[16] = "Edit";
+  if (_editSiteIdx == _activeSiteIdx && site.location.name[0])
+    strncpy(siteName, site.location.name, 15);
+  else
+    snprintf(siteName, sizeof(siteName), "Fav %d", _editSiteIdx + 1);
+  drawHeader(siteName);
+
+  _u8g2.setFont(u8g2_font_5x7_tf);
+  char buf[8];
+
+  // LAT row (y=22)
+  _u8g2.drawStr(0, 22, "LAT");
+  snprintf(buf, sizeof(buf), "%2d", _locFields[0]);
+  drawField(buf, 20, 22, _editField == 0);
+  _u8g2.drawStr(32, 22, "\xb0");
+  snprintf(buf, sizeof(buf), "%02d", _locFields[1]);
+  drawField(buf, 38, 22, _editField == 1);
+  _u8g2.drawStr(49, 22, "'");
+  snprintf(buf, sizeof(buf), "%02d", _locFields[2]);
+  drawField(buf, 55, 22, _editField == 2);
+  _u8g2.drawStr(66, 22, "\"");
+  buf[0] = (_locFields[3] == 0) ? 'N' : 'S'; buf[1] = '\0';
+  drawField(buf, 72, 22, _editField == 3);
+
+  // LON row (y=33)
+  _u8g2.drawStr(0, 33, "LON");
+  snprintf(buf, sizeof(buf), "%3d", _locFields[4]);
+  drawField(buf, 20, 33, _editField == 4);
+  _u8g2.drawStr(35, 33, "\xb0");
+  snprintf(buf, sizeof(buf), "%02d", _locFields[5]);
+  drawField(buf, 41, 33, _editField == 5);
+  _u8g2.drawStr(52, 33, "'");
+  snprintf(buf, sizeof(buf), "%02d", _locFields[6]);
+  drawField(buf, 58, 33, _editField == 6);
+  _u8g2.drawStr(69, 33, "\"");
+  buf[0] = (_locFields[7] == 0) ? 'E' : 'W'; buf[1] = '\0';
+  drawField(buf, 75, 33, _editField == 7);
+
+  // TZ row (y=44)
+  _u8g2.drawStr(0, 44, "TZ");
+  snprintf(buf, sizeof(buf), "%+3d", _locFields[8]);
+  drawField(buf, 20, 44, _editField == 8);
+
+  // Bottom row (y=57)
+  if (_editField == 9) {
+    drawField("[Save]", 0, 57, true);
+    _u8g2.drawStr(42, 57, "hold=cancel");
+  } else {
+    _u8g2.drawStr(0, 57, "next>  hold=cancel");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// drawDateTimeEdit — field-by-field time/date editor
+// Fields: 0=hour 1=min 2=day 3=month 4=year 5=Save
+
+void LocalDisplay::drawDateTimeEdit() {
+  drawHeader("Date & Time");
+  _u8g2.setFont(u8g2_font_5x7_tf);
+  char buf[8];
+
+  // Time row (y=24)
+  _u8g2.drawStr(0, 24, "Time");
+  snprintf(buf, sizeof(buf), "%02d", _dtFields[0]);
+  drawField(buf, 30, 24, _editField == 0);
+  _u8g2.drawStr(41, 24, ":");
+  snprintf(buf, sizeof(buf), "%02d", _dtFields[1]);
+  drawField(buf, 47, 24, _editField == 1);
+
+  // Date row (y=36)
+  _u8g2.drawStr(0, 36, "Date");
+  snprintf(buf, sizeof(buf), "%02d", _dtFields[2]);
+  drawField(buf, 30, 36, _editField == 2);
+  _u8g2.drawStr(41, 36, "/");
+  snprintf(buf, sizeof(buf), "%02d", _dtFields[3]);
+  drawField(buf, 47, 36, _editField == 3);
+  _u8g2.drawStr(58, 36, "/");
+  snprintf(buf, sizeof(buf), "%4d", _dtFields[4]);
+  drawField(buf, 64, 36, _editField == 4);
+
+  // Bottom row (y=57)
+  if (_editField == 5) {
+    drawField("[Save]", 0, 57, true);
+    _u8g2.drawStr(42, 57, "hold=cancel");
+  } else {
+    _u8g2.drawStr(0, 57, "next>  hold=cancel");
+  }
+}
+
+// ---------------------------------------------------------------------------
 // goToTarget — compute RA/Dec and request slew
 
 void LocalDisplay::goToTarget(uint8_t idx) {
@@ -639,6 +888,19 @@ void LocalDisplay::init() {
       return;
     }
     _u8g2.setContrast(200);
+  }
+
+  // Restore last-used favourite site (before splash so lat/lon is correct)
+  {
+    uint8_t lastSite = 0;
+    nv().kv().getOrInit("LD_ACTV_SITE", lastSite);
+    if (lastSite > 2) lastSite = 0;
+    _activeSiteIdx = lastSite;
+    if (lastSite != 0) {
+      site.readLocation(lastSite);
+      site.updateLocation();
+      VF("MSG: LocalDisplay, restored site "); VL(lastSite);
+    }
   }
 
   // Splash screen: show site lat/lon in DMS for 2 seconds
@@ -720,8 +982,8 @@ void LocalDisplay::poll() {
         switch (_menuSel) {
           case 0: _screen = SCR_MOVE_TO;                             break;
           case 1: _stubTitle = _mainItems[1]; _screen = SCR_STUB;    break;
-          case 2: _stubTitle = _mainItems[2]; _screen = SCR_STUB;    break;
-          case 3: _stubTitle = _mainItems[3]; _screen = SCR_STUB;    break;
+          case 2: _stubTitle = _mainItems[2]; _screen = SCR_STUB;     break;
+          case 3: _screen = SCR_SETTINGS;                            break;
         }
         _menuSel = 0;
       }
@@ -765,6 +1027,115 @@ void LocalDisplay::poll() {
         _menuSel = 0;
       }
       break;
+
+    case SCR_SETTINGS:
+      if (delta != 0) _menuSel = WRAP(_menuSel, delta, SETTINGS_COUNT);
+      if (shortPress) {
+        if (_menuSel == 0) {
+          // Load site names from NV for list display
+          for (uint8_t i = 0; i < 3; i++) {
+            Location tempLoc = {};
+            char key[24];
+            snprintf(key, sizeof(key), "LOCATION%u_SETTINGS", i);
+            nv().kv().getOrInit(key, tempLoc);
+            strncpy(_siteNames[i], tempLoc.name, 15);
+            _siteNames[i][15] = '\0';
+          }
+          _screen = SCR_LOC_LIST;
+          _menuSel = _activeSiteIdx;
+        } else if (_menuSel == 1) {
+          enterDateTimeEdit();
+          _screen = SCR_DATETIME_EDIT;
+        } else {
+          _screen = SCR_MAIN_MENU;
+          _menuSel = 3;
+        }
+      }
+      if (longPress) { _screen = SCR_MAIN_MENU; _menuSel = 3; }
+      break;
+
+    case SCR_LOC_LIST:
+      if (delta != 0) _menuSel = WRAP(_menuSel, delta, 4);
+      if (shortPress) {
+        if (_menuSel < 3) {
+          _activeSiteIdx = _menuSel;
+          uint8_t n = _activeSiteIdx;
+          nv().kv().put("LD_ACTV_SITE", n);
+          site.readLocation(n);
+          site.updateLocation();
+          VF("MSG: LocalDisplay, activated site "); VL(n);
+        } else {
+          _screen = SCR_SETTINGS;
+          _menuSel = 0;
+        }
+      }
+      if (longPress) {
+        if (_menuSel < 3) {
+          enterLocEdit(_menuSel);
+          _screen = SCR_LOC_EDIT;
+        } else {
+          _screen = SCR_SETTINGS;
+          _menuSel = 0;
+        }
+      }
+      break;
+
+    case SCR_LOC_EDIT:
+      if (delta != 0) {
+        switch (_editField) {
+          case 0: _locFields[0] = (int16_t)constrain((int)_locFields[0] + delta, 0,   90); break;
+          case 1: _locFields[1] = (int16_t)WRAP(_locFields[1], delta, 60);                  break;
+          case 2: _locFields[2] = (int16_t)WRAP(_locFields[2], delta, 60);                  break;
+          case 3: _locFields[3] = (int16_t)WRAP(_locFields[3], delta, 2);                   break;
+          case 4: _locFields[4] = (int16_t)constrain((int)_locFields[4] + delta, 0,  180); break;
+          case 5: _locFields[5] = (int16_t)WRAP(_locFields[5], delta, 60);                  break;
+          case 6: _locFields[6] = (int16_t)WRAP(_locFields[6], delta, 60);                  break;
+          case 7: _locFields[7] = (int16_t)WRAP(_locFields[7], delta, 2);                   break;
+          case 8: _locFields[8] = (int16_t)constrain((int)_locFields[8] + delta, -12, 12); break;
+        }
+      }
+      if (shortPress) {
+        if (_editField == 9) {
+          saveLocEdit();
+          // Refresh site names cache
+          strncpy(_siteNames[_editSiteIdx],
+                  site.location.name[0] ? site.location.name : "", 15);
+          _screen = SCR_LOC_LIST;
+          _menuSel = _editSiteIdx;
+        } else {
+          _editField++;
+        }
+      }
+      if (longPress) {
+        _screen = SCR_LOC_LIST;
+        _menuSel = _editSiteIdx;
+      }
+      break;
+
+    case SCR_DATETIME_EDIT:
+      if (delta != 0) {
+        switch (_editField) {
+          case 0: _dtFields[0] = (int16_t)WRAP(_dtFields[0], delta, 24);                     break;
+          case 1: _dtFields[1] = (int16_t)WRAP(_dtFields[1], delta, 60);                     break;
+          case 2: _dtFields[2] = (int16_t)constrain((int)_dtFields[2] + delta, 1,   31);     break;
+          case 3: _dtFields[3] = (int16_t)constrain((int)_dtFields[3] + delta, 1,   12);     break;
+          case 4: _dtFields[4] = (int16_t)constrain((int)_dtFields[4] + delta, 2020, 2099);  break;
+        }
+      }
+      if (shortPress) {
+        if (_editField == 5) {
+          saveDateTimeEdit();
+          _screen = SCR_SETTINGS;
+          _menuSel = 1;
+        } else {
+          _editField++;
+        }
+      }
+      if (longPress) {
+        _screen = SCR_SETTINGS;
+        _menuSel = 1;
+      }
+      break;
   }
 
   // ---- Draw ----
@@ -792,6 +1163,22 @@ void LocalDisplay::poll() {
 
       case SCR_STUB:
         drawStub(_stubTitle);
+        break;
+
+      case SCR_SETTINGS:
+        drawSettings();
+        break;
+
+      case SCR_LOC_LIST:
+        drawLocList();
+        break;
+
+      case SCR_LOC_EDIT:
+        drawLocEdit();
+        break;
+
+      case SCR_DATETIME_EDIT:
+        drawDateTimeEdit();
         break;
     }
   } while (_u8g2.nextPage());
