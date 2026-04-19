@@ -94,6 +94,9 @@ class Site {
       TimeLocationSource *tlsFallback;
     #endif
 
+    // reads the location information from NV and applies it; locationNumber can be 0..3
+    void readLocation(uint8_t number);
+
   private:
     // gets the time in hours that have passed since Julian Day was set (UT1)
     double getTime();
@@ -109,10 +112,6 @@ class Site {
 
     // reads the julian date information from NV
     void readJD();
-
-    // reads the location information from NV
-    // locationNumber can be 0..3
-    void readLocation(uint8_t number);
 
     // sets the site altitude in meters
     bool setElevation(float e);
