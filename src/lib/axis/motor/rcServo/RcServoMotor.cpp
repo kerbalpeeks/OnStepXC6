@@ -15,8 +15,10 @@ RcServoMotor::RcServoMotor(uint8_t axisNumber, int8_t reverse, uint8_t pwmPin, f
   : Motor(axisNumber, reverse), _pwmPin(pwmPin), _stepsPerDeg(stepsPerDeg) {
   strcpy(axisPrefix, " Axis_RcServo, ");
   axisPrefix[5] = '0' + axisNumber;
-  if (axisNumber >= 1 && axisNumber <= 2)
+  if (axisNumber >= 1 && axisNumber <= 2) {
     rcServoInstance[axisNumber - 1] = this;
+    callback = (axisNumber == 1) ? moveRcServoAxis1 : moveRcServoAxis2;
+  }
 }
 
 bool RcServoMotor::init() {
@@ -28,24 +30,13 @@ bool RcServoMotor::init() {
 
   VF("MSG:"); V(axisPrefix); VF("RC servo on GPIO"); V(_pwmPin); VLF(", homed to 90° (center)");
 
-  void (*cb)() = (axisNumber == 1) ? moveRcServoAxis1 : moveRcServoAxis2;
-  char taskName[8] = "RcSrv_";
-  taskName[6] = '0' + axisNumber;
-  taskName[7] = '\0';
-  taskHandle = tasks.add(0, 0, true, 0, cb, taskName);
-  if (!taskHandle) { DLF("ERR: RcServoMotor, task creation failed"); return false; }
-  tasks.setPeriodSubMicros(taskHandle, 0);
-
   ready = true;
   return true;
 }
 
 void RcServoMotor::enable(bool value) {
   enabled = value;
-  if (!enabled) {
-    _servo.write(90);
-    if (taskHandle) tasks.setPeriodSubMicros(taskHandle, 0);
-  }
+  if (!enabled) _servo.write(90);
 }
 
 float RcServoMotor::getFrequencySteps() {

@@ -58,8 +58,6 @@ class RcServoMotor : public Motor {
 
     // throttle servo writes to 50 Hz (SG90 update rate)
     uint32_t _lastServoUpdateMs = 0;
-
-    uint8_t  taskHandle = 0;
 };
 
 void moveRcServoAxis1();
