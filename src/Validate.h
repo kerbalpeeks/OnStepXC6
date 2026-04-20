@@ -323,8 +323,14 @@
   #error "Configuration (Config.h): Setting AXIS2_LIMIT_MIN unknown, use value in the range -90 to 0."
 #endif
 
-#if AXIS2_LIMIT_MAX < 0 || AXIS2_LIMIT_MAX > 90
-  #error "Configuration (Config.h): Setting AXIS2_LIMIT_MAX unknown, use value in the range 0 to 90."
+#if MOUNT_ALTERNATE_ORIENTATION == ON
+  #if AXIS2_LIMIT_MAX < 0 || AXIS2_LIMIT_MAX > 180
+    #error "Configuration (Config.h): Setting AXIS2_LIMIT_MAX unknown, use value in the range 0 to 180 (MOUNT_ALTERNATE_ORIENTATION is ON)."
+  #endif
+#else
+  #if AXIS2_LIMIT_MAX < 0 || AXIS2_LIMIT_MAX > 90
+    #error "Configuration (Config.h): Setting AXIS2_LIMIT_MAX unknown, use value in the range 0 to 90."
+  #endif
 #endif
 
 #if (AXIS2_SENSE_HOME) != OFF && (AXIS2_SENSE_HOME) < 0
