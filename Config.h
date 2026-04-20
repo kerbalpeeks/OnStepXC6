@@ -109,11 +109,7 @@
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
 #define AXIS2_REVERSE                 ON  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS2_LIMIT_MIN                0 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
-<<<<<<< HEAD
 #define AXIS2_LIMIT_MAX                180 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
-=======
-#define AXIS2_LIMIT_MAX               180 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
->>>>>>> 1a77c90 (Config: fix axis limits and enable zenith flip for full-hemisphere servo coverage)
 #define AXIS2_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
 
 #define AXIS2_DRIVER_MICROSTEPS       2 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
