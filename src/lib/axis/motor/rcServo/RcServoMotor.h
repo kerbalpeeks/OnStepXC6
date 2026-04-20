@@ -46,18 +46,20 @@ class RcServoMotor : public Motor {
     float   _stepsPerDeg;    // steps per degree (from AXIS*_STEPS_PER_DEGREE)
     static const DriverStatus noFault;  // pre-built ok status
 
-    bool    ready   = false;
-    bool    enabled = false;
+    // ready/enabled are inherited public members of Motor base class — do NOT redeclare here
+    // (shadowing them causes Axis to always see false via the base class pointer)
 
-    volatile int  step = 0;   // -1, 0, +1 (motorSteps/targetSteps inherited from Motor)
+    volatile int  _rcStep = 0;  // -1, 0, +1 — separate from base class 'step'
 
     float         currentFrequency  = 0.0F;
-    float         backlashFrequency = 0.0F;
     unsigned long lastPeriod        = 0;
     unsigned long lastPeriodSet     = 0;
 
     // throttle servo writes to 50 Hz (SG90 update rate)
     uint32_t _lastServoUpdateMs = 0;
+
+    uint8_t  taskHandle = 0;
+    void   (*callback)() = NULL;
 };
 
 void moveRcServoAxis1();

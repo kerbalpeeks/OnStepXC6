@@ -30,17 +30,28 @@ bool RcServoMotor::init() {
 
   VF("MSG:"); V(axisPrefix); VF("RC servo on GPIO"); V(_pwmPin); VLF(", homed to 90° (center)");
 
+  char taskName[8] = "RcSrv_";
+  taskName[6] = '0' + axisNumber;
+  taskName[7] = '\0';
+  taskHandle = tasks.add(0, 0, true, 0, callback, taskName);
+  if (!taskHandle) { DLF("ERR: RcServoMotor, task creation failed"); return false; }
+  tasks.setPeriodSubMicros(taskHandle, 0);
+
   ready = true;
   return true;
 }
 
 void RcServoMotor::enable(bool value) {
   enabled = value;
-  if (!enabled) _servo.write(90);
+  if (!enabled) {
+    _servo.write(90);
+    if (taskHandle) { tasks.setPeriodSubMicros(taskHandle, 0); lastPeriod = 0; lastPeriodSet = 0; }
+    noInterrupts(); _rcStep = 0; interrupts();
+  }
 }
 
 float RcServoMotor::getFrequencySteps() {
-  return currentFrequency * step;
+  return currentFrequency * _rcStep;
 }
 
 void RcServoMotor::setFrequencySteps(float frequency) {
@@ -69,21 +80,21 @@ void RcServoMotor::setFrequencySteps(float frequency) {
       dir        = 0;
     }
 
-    if (step != dir) step = 0;
+    if (_rcStep != dir) _rcStep = 0;
     if (lastPeriodSet != lastPeriod) {
       tasks.setPeriodSubMicros(taskHandle, lastPeriod);
       lastPeriodSet = lastPeriod;
     }
-    step = dir;
+    _rcStep = dir;
   } else {
     noInterrupts();
-    step = dir;
+    _rcStep = dir;
     interrupts();
   }
 }
 
 IRAM_ATTR void RcServoMotor::move() {
-  if (sync && !inBacklash) targetSteps += step;
+  if (sync && !inBacklash) targetSteps += _rcStep;
 
   if (motorSteps > targetSteps) {
     motorSteps--;
