@@ -112,7 +112,8 @@ void RcServoMotor::updateServoPosition() {
   if (now - _lastServoUpdateMs < 20) return;  // 50 Hz throttle
   _lastServoUpdateMs = now;
 
-  float deg = 90.0F + (float)motorSteps / _stepsPerDeg;
+  long steps = normalizedReverse ? -motorSteps : motorSteps;
+  float deg = 90.0F + (float)steps / _stepsPerDeg;
   deg = constrain(deg, 0.0F, 180.0F);
   _servo.write((int)roundf(deg));
 }
