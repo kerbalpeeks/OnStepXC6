@@ -65,7 +65,7 @@
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ 
 #define AXIS1_STEPS_PER_DEGREE       51.2 //  12800, n. Number of steps per degree:    11.38                                 <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
-#define AXIS1_REVERSE                 OFF //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
+#define AXIS1_REVERSE                 ON //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS1_LIMIT_MIN              -180 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_MAX               180 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
@@ -106,10 +106,11 @@
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
 #define AXIS2_STEPS_PER_DEGREE      409.6 //  12800, n. Number of steps per degree:     11.38                                <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
-#define AXIS2_REVERSE                 OFF  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
+#define AXIS2_REVERSE                 ON  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS2_LIMIT_MIN               -90 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_MAX                90 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
+#define AXIS2_SLEW_RATE_PERCENT       800.0F                      // allows max slew rate slow down of Axis2 relative to Axis1
 
 #define AXIS2_DRIVER_MICROSTEPS       2 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
 #define AXIS2_DRIVER_MICROSTEPS_GOTO  OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
@@ -137,7 +138,7 @@
 #define AXIS2_SENSE_LIMIT_MAX LIMIT_SENSE // ...NSE, HIGH or LOW state on limit sense switch stops movement.                  Option
 
 // MOUNT -------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Mount#MOUNT
-#define MOUNT_TYPE             ALTAZM_UNL //    GEM, GEM         German Equatorial Mount, etc. that need meridian flips.     <-Req'd
+#define MOUNT_TYPE                 ALTAZM //    GEM, GEM         German Equatorial Mount, etc. that need meridian flips.     <-Req'd
                                           //         GEM_TA      GEM w/tangent arm Declination
                                           //         GEM_TAC     GEM w/tangent arm Declination and geometry correction
                                           //         FORK        Fork Mount
@@ -146,7 +147,7 @@
                                           //         ALTAZM      Altitude/Azimuth Mount, Dobsonians, etc.
                                           //         ALTAZM_UNL  ALTAZM w/unlimited Azimuth motion
 
-#define MOUNT_ALTERNATE_ORIENTATION   ON  //    OFF, ON Enables Meridian Flips for FORK mounts and passing through the        Option
+#define MOUNT_ALTERNATE_ORIENTATION   OFF //    OFF, ON Enables Meridian Flips for FORK mounts and passing through the        Option
                                           //         Zenith for ALTAZM mounts.  GEM mode ignores this setting.
 
 #define MOUNT_STARTUP_MODE        SA_AUTO // ..AUTO, SA_STRICT, or SA_PERMISSIVE. Controls when startup trust is granted.     Option
@@ -213,7 +214,7 @@
 #define TRACK_COMPENSATION_MEMORY     OFF //    OFF, ON Remembers refraction/pointing model compensated tracking settings.    Option
 
 // SLEWING BEHAVIOUR ------------------------------------------ see https://onstep.groups.io/g/main/wiki/Configuration_Mount#SLEWING
-#define SLEW_RATE_BASE_DESIRED       10.0 //    1.0, n. Desired slew rate in deg/sec. Adjustable at run-time from            <-Req'd
+#define SLEW_RATE_BASE_DESIRED        5.0 //    1.0, n. Desired slew rate in deg/sec. Adjustable at run-time from            <-Req'd
                                           //         1/2 to 2x this rate, and as performace considerations require.
 #define SLEW_RATE_MEMORY              OFF //    OFF, ON Remembers rates set across power cycles.                              Option
 #define SLEW_ACCELERATION_DIST        5.0 //    5.0, n, (degrees.) Approx. distance for acceleration (and deceleration.)      Adjust
