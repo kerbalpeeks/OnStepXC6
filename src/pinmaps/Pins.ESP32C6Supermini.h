@@ -221,6 +221,23 @@
 //    #define I2C_SDA_PIN  14   // GPIO14 is free and has no other default use
 //    #define I2C_SCL_PIN  21   // GPIO21 (bottom-right pin)
 
+// SG90 RC servo (SERVO_RC driver) ----------------------------------------------------------------
+// When switching from ULN2003 to SG90 servos, only 1 GPIO per axis is needed (PWM signal).
+// Reuse the IN1 pin of each ULN2003 group — it is physically accessible and proven:
+//
+//  In Config.h:
+//    #define AXIS1_DRIVER_MODEL    SERVO_RC
+//    #define AXIS1_SERVO_PIN       20   // GPIO20 — was AXIS1_IN1, right column
+//    #define AXIS1_STEPS_PER_DEGREE 10.0
+//
+//    #define AXIS2_DRIVER_MODEL    SERVO_RC
+//    #define AXIS2_SERVO_PIN        2   // GPIO2 — was AXIS2_IN1, left column
+//    #define AXIS2_STEPS_PER_DEGREE 10.0
+//
+//  SG90 wiring: Red → 5V header pin, Brown → GND header pin, Yellow → AXIS*_SERVO_PIN
+//  Position model: 90° = center (power-on). servoDeg = 90 + steps/stepsPerDeg, clamped 0–180°.
+//  Physical alignment: orient the device so 90° points in your desired home direction.
+
 #else
   #error "Wrong processor for this configuration!"
 #endif

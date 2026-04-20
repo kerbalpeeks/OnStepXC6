@@ -428,6 +428,16 @@
   #endif
 #endif
 
+#if AXIS1_DRIVER_MODEL >= RC_SERVO_DRIVER_FIRST && AXIS1_DRIVER_MODEL <= RC_SERVO_DRIVER_LAST
+  #define AXIS1_RC_SERVO_PRESENT
+  #ifndef AXIS1_SERVO_PIN
+  #define AXIS1_SERVO_PIN               OFF
+  #endif
+  #ifndef AXIS1_DRIVER_STATUS
+  #define AXIS1_DRIVER_STATUS           OFF
+  #endif
+#endif
+
 #ifndef AXIS2_DRIVER_MODEL
 #define AXIS2_DRIVER_MODEL            OFF                         // specify a driver to enable
 #endif
@@ -620,6 +630,16 @@
   #endif
   #ifndef AXIS2_IN4_PIN
   #define AXIS2_IN4_PIN                 OFF
+  #endif
+#endif
+
+#if AXIS2_DRIVER_MODEL >= RC_SERVO_DRIVER_FIRST && AXIS2_DRIVER_MODEL <= RC_SERVO_DRIVER_LAST
+  #define AXIS2_RC_SERVO_PRESENT
+  #ifndef AXIS2_SERVO_PIN
+  #define AXIS2_SERVO_PIN               OFF
+  #endif
+  #ifndef AXIS2_DRIVER_STATUS
+  #define AXIS2_DRIVER_STATUS           OFF
   #endif
 #endif
 
@@ -2234,8 +2254,13 @@
   #define UNI_MOTOR_PRESENT
 #endif
 
+// flag presence of RC hobby servo motors
+#if defined(AXIS1_RC_SERVO_PRESENT) || defined(AXIS2_RC_SERVO_PRESENT)
+  #define RC_SERVO_MOTOR_PRESENT
+#endif
+
 // flag to indicate if any motor is present
-#if defined(SERVO_MOTOR_PRESENT) || defined(STEP_DIR_MOTOR_PRESENT) || defined(ODRIVE_MOTOR_PRESENT) || defined(KTECH_MOTOR_PRESENT) || defined(UNI_MOTOR_PRESENT)
+#if defined(SERVO_MOTOR_PRESENT) || defined(STEP_DIR_MOTOR_PRESENT) || defined(ODRIVE_MOTOR_PRESENT) || defined(KTECH_MOTOR_PRESENT) || defined(UNI_MOTOR_PRESENT) || defined(RC_SERVO_MOTOR_PRESENT)
   #define MOTOR_PRESENT
 #endif
 

@@ -81,6 +81,11 @@
 #define ULN2003                     50     // 4-wire unipolar, full-step or half-step
 #define UNI_DRIVER_LAST             55
 
+// RC hobby servo driver (SG90-style 50 Hz PWM position servos, open-loop)
+#define RC_SERVO_DRIVER_FIRST       60
+#define SERVO_RC                    60     // RC hobby servo (1000-2000 µs PWM, e.g. SG90)
+#define RC_SERVO_DRIVER_LAST        69
+
 // servo driver (usually for DC motors equipped with encoders)
 // changes here must be reflected in the ServoDriver.cpp file, etc.
 #define SERVO_DRIVER_FIRST          100

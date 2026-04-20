@@ -36,6 +36,7 @@
 #include "motor/oDrive/ODrive.h"
 #include "motor/kTech/KTech.h"
 #include "motor/unipolar/UniMotor.h"
+#include "motor/rcServo/RcServoMotor.h"
 
 #pragma pack(1)
 
