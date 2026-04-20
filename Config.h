@@ -110,7 +110,6 @@
 #define AXIS2_LIMIT_MIN               -90 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_MAX                90 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
-#define AXIS2_SLEW_RATE_PERCENT       800.0F                      // allows max slew rate slow down of Axis2 relative to Axis1
 
 #define AXIS2_DRIVER_MICROSTEPS       2 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
 #define AXIS2_DRIVER_MICROSTEPS_GOTO  OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
