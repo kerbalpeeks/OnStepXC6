@@ -65,7 +65,7 @@
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ 
 #define AXIS1_STEPS_PER_DEGREE       10.0 //  12800, n. Number of steps per degree:    51.2 for ULN2003                     <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
-#define AXIS1_REVERSE                 OFF //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
+#define AXIS1_REVERSE                 ON //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS1_LIMIT_MIN              -90 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_MAX               90 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
@@ -140,10 +140,10 @@
 
 
 // HOME DEFAULTS (TEST)
-#define LIMIT_HORIZON 				 0.0F
+#define LIMIT_HORIZON 				 9.0F
 #define LIMIT_OVERHEAD 				90.0F
 #define AXIS1_HOME_DEFAULT             0
-#define AXIS2_HOME_DEFAULT            90
+#define AXIS2_HOME_DEFAULT            10
 
 
 
