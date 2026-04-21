@@ -27,6 +27,9 @@ bool RcServoMotor::init() {
   _servo.setPeriodHertz(50);
   _servo.attach(_pwmPin, 500, 2500);  // SG90: 500–2500 µs covers full 0–180°
   _servo.write(90);                   // center — servo physically moves here on boot
+  // SG90 worst-case travel (180°) = 400ms. Wait here so this servo's inrush current
+  // dissipates before the next axis initialises, preventing I2C bus voltage sag.
+  delay(400);
 
   VF("MSG:"); V(axisPrefix); VF("RC servo on GPIO"); V(_pwmPin); VLF(", homed to 90° (center)");
 
