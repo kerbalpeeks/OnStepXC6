@@ -416,6 +416,15 @@
 #define LOCAL_DISPLAY_ENCODER_DT_PIN    9
 #define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // GPIO1: free when PEC_SENSE OFF; avoid GPIO8 (RGB LED)
 
+// Auto-goto after boot: servos slew to this position ~3 s after startup
+// Keeps zenith=90° mechanical invariant intact (HOME_DEFAULT unchanged).
+#define LOCAL_DISPLAY_STARTUP_ALT     10.0  // degrees above horizon
+#define LOCAL_DISPLAY_STARTUP_AZ       0.0  // degrees (0 = North)
+
+// Flash this GPIO for 10 s (5 Hz) when a goto completes.
+// GPIO21 = bottom-right header pin, free in the SERVO_RC setup.
+#define GOTO_LED_PIN                   21
+
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 #define FileVersionConfig 6

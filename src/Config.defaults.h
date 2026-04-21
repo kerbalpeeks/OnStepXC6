@@ -2561,6 +2561,15 @@
 #ifndef LOCAL_DISPLAY_POLL_MS
   #define LOCAL_DISPLAY_POLL_MS           100   // display refresh / encoder poll interval (ms)
 #endif
+#ifndef LOCAL_DISPLAY_STARTUP_ALT
+  #define LOCAL_DISPLAY_STARTUP_ALT       OFF   // auto-goto altitude (degrees) after boot; OFF = disabled
+#endif
+#ifndef LOCAL_DISPLAY_STARTUP_AZ
+  #define LOCAL_DISPLAY_STARTUP_AZ        OFF   // auto-goto azimuth  (degrees) after boot; OFF = disabled
+#endif
+#ifndef GOTO_LED_PIN
+  #define GOTO_LED_PIN                    OFF   // GPIO for goto-complete LED; OFF = disabled
+#endif
 
 #if LOCAL_DISPLAY == ON
   #define LOCAL_DISPLAY_PRESENT

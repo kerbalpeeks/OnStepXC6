@@ -14,6 +14,14 @@
   #define LOCAL_DISPLAY_I2C_ADDR 0x3C
 #endif
 
+// Forward declarations for task callbacks defined later in this file
+#if LOCAL_DISPLAY_STARTUP_ALT != OFF && LOCAL_DISPLAY_STARTUP_AZ != OFF
+  static void ldStartupSlewCb();
+#endif
+#if GOTO_LED_PIN != OFF
+  static void ldGotoLedBlink();
+#endif
+
 // ---------------------------------------------------------------------------
 // U8g2 display object (128×64 SSD1306, hardware I2C, 2-page buffer)
 static U8G2_SSD1306_128X64_NONAME_2_HW_I2C _u8g2(U8G2_R0, /*reset=*/U8X8_PIN_NONE);
@@ -956,6 +964,18 @@ void LocalDisplay::init() {
 
   _ready = true;
   VLF("MSG: LocalDisplay, ready");
+
+  // Goto-complete LED — configure GPIO now so it's immediately usable
+  #if GOTO_LED_PIN != OFF
+    pinMode(GOTO_LED_PIN, OUTPUT);
+    digitalWriteEx(GOTO_LED_PIN, LOW);
+  #endif
+
+  // Startup slew — schedule 3 s after init so DS3231 and axes are fully settled
+  #if LOCAL_DISPLAY_STARTUP_ALT != OFF && LOCAL_DISPLAY_STARTUP_AZ != OFF
+    _startupSlewHandle = tasks.add(3000, 0, false, 7, ldStartupSlewCb, "LdStrt");
+    if (!_startupSlewHandle) { VLF("WRN: LocalDisplay, startup slew task failed"); }
+  #endif
 }
 
 // ---------------------------------------------------------------------------
@@ -963,6 +983,21 @@ void LocalDisplay::init() {
 
 void LocalDisplay::poll() {
   if (!_ready) return;
+
+  // Goto-complete LED: detect GS_GOTO → GS_NONE transition
+  #if GOTO_LED_PIN != OFF
+  {
+    bool gotoNowActive = (goTo.state == GS_GOTO);
+    if (_wasGotoActive && !gotoNowActive) {
+      // cancel any in-progress blink and restart the 10-second burst
+      if (_sGotoLedHandle) { tasks.setDurationComplete(_sGotoLedHandle); _sGotoLedHandle = 0; }
+      _sLedState = false;
+      digitalWriteEx(GOTO_LED_PIN, LOW);
+      _sGotoLedHandle = tasks.add(100, 10000, true, 6, ldGotoLedBlink, "GtoLED");
+    }
+    _wasGotoActive = gotoNowActive;
+  }
+  #endif
 
   // Consume accumulated encoder and button events
   int  delta = _readDelta(_encDelta);
@@ -1183,6 +1218,42 @@ void LocalDisplay::poll() {
     }
   } while (_u8g2.nextPage());
 }
+
+// ---------------------------------------------------------------------------
+// Startup slew: auto-goto after boot if LOCAL_DISPLAY_STARTUP_ALT/AZ are defined
+
+#if LOCAL_DISPLAY_STARTUP_ALT != OFF && LOCAL_DISPLAY_STARTUP_AZ != OFF
+static void ldStartupSlewCb() {
+  if (!site.isDateTimeReady()) return;
+
+  Coordinate coord;
+  memset(&coord, 0, sizeof(coord));
+  coord.z        = degToRad((double)LOCAL_DISPLAY_STARTUP_AZ);
+  coord.a        = degToRad((double)LOCAL_DISPLAY_STARTUP_ALT);
+  coord.pierSide = PIER_SIDE_NONE;
+  transform.horToEqu(&coord);
+  double st = site.getSiderealTime() * (M_PI / 12.0);
+  coord.r = st - coord.h;
+  while (coord.r < 0)          coord.r += 2.0 * M_PI;
+  while (coord.r > 2.0 * M_PI) coord.r -= 2.0 * M_PI;
+
+  CommandError err = goTo.request(coord, PSS_BEST, false);
+  if (err != CE_NONE) { VF("WRN: LocalDisplay, startup slew error "); VL((int)err); }
+}
+#endif
+
+// ---------------------------------------------------------------------------
+// Goto-complete LED blink callback
+
+#if GOTO_LED_PIN != OFF
+static bool   _sLedState      = false;
+static uint8_t _sGotoLedHandle = 0;
+
+static void ldGotoLedBlink() {
+  _sLedState = !_sLedState;
+  digitalWriteEx(GOTO_LED_PIN, _sLedState ? HIGH : LOW);
+}
+#endif
 
 // ---------------------------------------------------------------------------
 // Global instance

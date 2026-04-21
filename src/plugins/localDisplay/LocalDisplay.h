@@ -159,6 +159,12 @@ class LocalDisplay {
       uint8_t  _dbgBtnRaw      = HIGH;
       uint16_t _dbgBounceCount = 0;
     #endif
+
+    // ---- Startup slew (auto-goto after boot if LOCAL_DISPLAY_STARTUP_ALT/AZ set) ----
+    uint8_t _startupSlewHandle = 0;
+
+    // ---- Goto-complete LED (blink handle and state are static in .cpp) ----
+    bool    _wasGotoActive  = false;
 };
 
 // Single global instance
