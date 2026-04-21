@@ -2561,12 +2561,9 @@
 #ifndef LOCAL_DISPLAY_POLL_MS
   #define LOCAL_DISPLAY_POLL_MS           100   // display refresh / encoder poll interval (ms)
 #endif
-#ifndef LOCAL_DISPLAY_STARTUP_ALT
-  #define LOCAL_DISPLAY_STARTUP_ALT       OFF   // auto-goto altitude (degrees) after boot; OFF = disabled
-#endif
-#ifndef LOCAL_DISPLAY_STARTUP_AZ
-  #define LOCAL_DISPLAY_STARTUP_AZ        OFF   // auto-goto azimuth  (degrees) after boot; OFF = disabled
-#endif
+// LOCAL_DISPLAY_STARTUP_ALT / LOCAL_DISPLAY_STARTUP_AZ — no defaults here.
+// These are float-valued; the preprocessor cannot evaluate floats in #if.
+// Leave undefined when not set in Config.h; use #ifdef to guard their use.
 #ifndef GOTO_LED_PIN
   #define GOTO_LED_PIN                    OFF   // GPIO for goto-complete LED; OFF = disabled
 #endif

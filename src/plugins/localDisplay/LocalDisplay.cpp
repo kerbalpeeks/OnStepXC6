@@ -14,11 +14,13 @@
   #define LOCAL_DISPLAY_I2C_ADDR 0x3C
 #endif
 
-// Forward declarations for task callbacks defined later in this file
-#if LOCAL_DISPLAY_STARTUP_ALT != OFF && LOCAL_DISPLAY_STARTUP_AZ != OFF
+// Forward declarations and file-scope state for task callbacks defined later
+#ifdef LOCAL_DISPLAY_STARTUP_ALT
   static void ldStartupSlewCb();
 #endif
 #if GOTO_LED_PIN != OFF
+  static bool    _sLedState      = false;
+  static uint8_t _sGotoLedHandle = 0;
   static void ldGotoLedBlink();
 #endif
 
@@ -968,11 +970,11 @@ void LocalDisplay::init() {
   // Goto-complete LED — configure GPIO now so it's immediately usable
   #if GOTO_LED_PIN != OFF
     pinMode(GOTO_LED_PIN, OUTPUT);
-    digitalWriteEx(GOTO_LED_PIN, LOW);
+    digitalWrite(GOTO_LED_PIN, LOW);
   #endif
 
   // Startup slew — schedule 3 s after init so DS3231 and axes are fully settled
-  #if LOCAL_DISPLAY_STARTUP_ALT != OFF && LOCAL_DISPLAY_STARTUP_AZ != OFF
+  #ifdef LOCAL_DISPLAY_STARTUP_ALT
     _startupSlewHandle = tasks.add(3000, 0, false, 7, ldStartupSlewCb, "LdStrt");
     if (!_startupSlewHandle) { VLF("WRN: LocalDisplay, startup slew task failed"); }
   #endif
@@ -992,7 +994,7 @@ void LocalDisplay::poll() {
       // cancel any in-progress blink and restart the 10-second burst
       if (_sGotoLedHandle) { tasks.setDurationComplete(_sGotoLedHandle); _sGotoLedHandle = 0; }
       _sLedState = false;
-      digitalWriteEx(GOTO_LED_PIN, LOW);
+      digitalWrite(GOTO_LED_PIN, LOW);
       _sGotoLedHandle = tasks.add(100, 10000, true, 6, ldGotoLedBlink, "GtoLED");
     }
     _wasGotoActive = gotoNowActive;
@@ -1222,7 +1224,7 @@ void LocalDisplay::poll() {
 // ---------------------------------------------------------------------------
 // Startup slew: auto-goto after boot if LOCAL_DISPLAY_STARTUP_ALT/AZ are defined
 
-#if LOCAL_DISPLAY_STARTUP_ALT != OFF && LOCAL_DISPLAY_STARTUP_AZ != OFF
+#ifdef LOCAL_DISPLAY_STARTUP_ALT
 static void ldStartupSlewCb() {
   if (!site.isDateTimeReady()) return;
 
@@ -1246,12 +1248,9 @@ static void ldStartupSlewCb() {
 // Goto-complete LED blink callback
 
 #if GOTO_LED_PIN != OFF
-static bool   _sLedState      = false;
-static uint8_t _sGotoLedHandle = 0;
-
 static void ldGotoLedBlink() {
   _sLedState = !_sLedState;
-  digitalWriteEx(GOTO_LED_PIN, _sLedState ? HIGH : LOW);
+  digitalWrite(GOTO_LED_PIN, _sLedState ? HIGH : LOW);
 }
 #endif
 
