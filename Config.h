@@ -53,6 +53,7 @@
 #define NV_DRIVER              NV_DEFAULT // NV_DEF, Use platforms default non-volatile device to remember runtime settings.  Option
 
 #define SERIAL_TMC_HARDWARE_UART          //         Enable single-wire hardware UART for TMC2209 drivers (GPIO16=TX, GPIO2=RX)
+#define DRIVER_TMC_STEPPER                //         Use TMCStepper library (teemuatlut) — avoids conflict with TMC2209 class name
 
 // =================================================================================================================================
 // MOUNT ===========================================================================================================================
