@@ -157,7 +157,12 @@
 #endif
 
 // default start of axis class hardware timers
-#define AXIS_HARDWARE_TIMER_BASE    2      // in the OnStepX timer#1 is the sidereal clock
+// On platforms with 3+ HW timers (ESP32 Xtensa, STM32, etc.), timer 1 is the sidereal clock
+// and axis motors start from timer 2. On ESP32-C6 (only 2 HW timers total), Config.h must
+// override this to 1 so both axis motors get timers and sidereal falls back to software.
+#ifndef AXIS_HARDWARE_TIMER_BASE
+  #define AXIS_HARDWARE_TIMER_BASE    2
+#endif
 
 // enable library features
 #define SERIAL_LOCAL_PRESENT

@@ -54,6 +54,7 @@
 
 #define SERIAL_TMC_HARDWARE_UART          //         Enable single-wire hardware UART for TMC2209 drivers (GPIO16=TX, GPIO2=RX)
 #define DRIVER_TMC_STEPPER                //         Use TMCStepper library (teemuatlut) — avoids conflict with TMC2209 class name
+#define AXIS_HARDWARE_TIMER_BASE 1        //         ESP32-C6 has only 2 HW timers: give both to axis motors, sidereal uses SW task
 
 // =================================================================================================================================
 // MOUNT ===========================================================================================================================
