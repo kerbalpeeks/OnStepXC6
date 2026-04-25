@@ -135,7 +135,7 @@
 #define LIMIT_HORIZON 				 9.0F
 #define LIMIT_OVERHEAD 				90.0F
 #define AXIS1_HOME_DEFAULT             0
-#define AXIS2_HOME_DEFAULT            0  // parked at zenith (Alt=90°)
+#define AXIS2_HOME_DEFAULT            0  // horizon (Alt=0°, physical starting position)
 
 
 
@@ -199,7 +199,7 @@
 #define PARK_SENSE                    OFF //    OFF, HIGH or LOW state indicates mount is in the park orientation.            Option
 #define PARK_SIGNAL                   OFF //    OFF, HIGH or LOW state park input signal triggers parking.                    Option
 #define PARK_STATUS                   OFF //    OFF, signals with a HIGH or LOW state when successfully parked.               Option 
-#define PARK_ALT                   0.0  // zenith
+#define PARK_ALT                   0.0  // horizon (physical starting position)
 #define PARK_AZ                     0.0  // North
 
 // PEC ------------------------------------------------------------ see https://onstep.groups.io/g/main/wiki/Configuration_Mount#PEC
