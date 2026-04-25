@@ -73,7 +73,7 @@
     #define SERIAL_TMC          Serial1
     #define SERIAL_TMC_BAUD     460800
     #define SERIAL_TMC_RX       2        // AUX2 — shared RX
-    #define SERIAL_TMC_TX       22       // AXIS1_M2 — TX (Axis1 address 0)
+    #define SERIAL_TMC_TX       16       // GPIO16 (hw UART TX, left column) — replaces inaccessible GPIO22
     #define SERIAL_TMC_ADDRESS_MAP(x) (x)
   #endif
 #endif
@@ -142,7 +142,7 @@
 #define AXIS1_ENABLE_PIN        OFF  // set to a free GPIO in Config.h if needed
 #define AXIS1_M0_PIN            OFF  // GPIO11 not broken out; SPI MOSI must be reassigned
 #define AXIS1_M1_PIN            15   // GPIO15 (SPI SCK) — also the status LED
-#define AXIS1_M2_PIN            22   // SPI CS Axis1  —or—  TMC UART TX Axis1
+#define AXIS1_M2_PIN            16   // GPIO16 — TMC UART TX (GPIO22 not accessible on Supermini header)
 #define AXIS1_M3_PIN            AUX2_PIN  // SPI MISO  —or—  TMC UART RX (shared)
 #define AXIS1_STEP_PIN          4
 #define AXIS1_DIR_PIN           5

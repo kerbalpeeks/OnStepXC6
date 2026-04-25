@@ -22,7 +22,7 @@
 
 // SERIAL PORT COMMAND CHANNELS --------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#SERIAL_PORTS
 #define SERIAL_A_BAUD_DEFAULT        9600 //   9600, n. Where n=9600,19200,57600,115200,230400,460800 (common baud rates.)    Infreq
-#define SERIAL_B_BAUD_DEFAULT        9600 //   9600, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
+#define SERIAL_B_BAUD_DEFAULT         OFF //   9600, n. Baud rate as above. OFF: GPIO16 is used for TMC2209 UART TX.         Infreq
 #define SERIAL_B_ESP_FLASHING         OFF //    OFF, ON Upload ESP8266 WiFi firmware through SERIAL_B with :ESPFLASH# cmd.    Option
 #define SERIAL_C_BAUD_DEFAULT         OFF //    OFF, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
 #define SERIAL_D_BAUD_DEFAULT         OFF //    OFF, n. Baud rate as above. See (src/pinmaps/) for Serial port assignments.   Infreq
@@ -52,6 +52,8 @@
 // NON-VOLATILE MEMORY ---------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Controller#NV
 #define NV_DRIVER              NV_DEFAULT // NV_DEF, Use platforms default non-volatile device to remember runtime settings.  Option
 
+#define SERIAL_TMC_HARDWARE_UART          //         Enable single-wire hardware UART for TMC2209 drivers (GPIO16=TX, GPIO2=RX)
+
 // =================================================================================================================================
 // MOUNT ===========================================================================================================================
 
@@ -59,30 +61,24 @@
 // Typically: A4988, DRV8825, LV8729, S109, TMC2130, TMC5160, TMC2209, etc.
 
 // AXIS1 RA/AZM -------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Axes
-#define AXIS1_DRIVER_MODEL            SERVO_RC //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
+#define AXIS1_DRIVER_MODEL            TMC2209  //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
 
 // If runtime axis settings are enabled changes in the section below will be ignored (disable in SWS or by wiping NV/EEPROM):
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ 
-#define AXIS1_STEPS_PER_DEGREE       10.0 //  12800, n. Number of steps per degree:    51.2 for ULN2003                     <-Req'd
+#define AXIS1_STEPS_PER_DEGREE     1251.56 //  12800, n. (200 * 256 * 8.8) / 360 — AZ axis, 8.8:1 ring gear, 256x microsteps <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
 #define AXIS1_REVERSE                 ON //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
-#define AXIS1_LIMIT_MIN              -90 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
-#define AXIS1_LIMIT_MAX               90 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
+#define AXIS1_LIMIT_MIN             -180 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
+#define AXIS1_LIMIT_MAX              180 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
 
-#define AXIS1_DRIVER_MICROSTEPS       2 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
-#define AXIS1_DRIVER_MICROSTEPS_GOTO  OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
-
-#define AXIS1_IN1_PIN          20
-#define AXIS1_IN2_PIN          19
-#define AXIS1_IN3_PIN          18
-#define AXIS1_IN4_PIN          15        // onboard LED will pulse — normal
-#define AXIS1_SERVO_PIN        20
+#define AXIS1_DRIVER_MICROSTEPS       256 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
+#define AXIS1_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS1_DRIVER_IHOLD            OFF //    OFF, n, (mA.) Current during standstill. OFF uses IRUN/2.0                    Option
-#define AXIS1_DRIVER_IRUN             OFF //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
-#define AXIS1_DRIVER_IGOTO            OFF //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
+#define AXIS1_DRIVER_IHOLD            150 //    OFF, n, (mA.) Current during standstill. 25% of rated 0.6A.                  Option
+#define AXIS1_DRIVER_IRUN             500 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
+#define AXIS1_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 #define AXIS1_DRIVER_STATUS           OFF //    OFF, ON, HIGH, or LOW.  For driver status info/fault detection.               Option
@@ -101,30 +97,24 @@
                                           //         |HYST(n) Where n=0..1023 (ADU) for +/- Hystersis range.
 
 // AXIS2 DEC/ALT ------------------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Axes
-#define AXIS2_DRIVER_MODEL            SERVO_RC //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
+#define AXIS2_DRIVER_MODEL            TMC2209  //    OFF, Enter motor driver model (above) in both axes to activate the mount.    <-Often
 
 // If runtime axis settings are enabled changes in the section below will be ignored (disable in SWS or by wiping NV/EEPROM):
 // \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
-#define AXIS2_STEPS_PER_DEGREE      10.0 //  12800, n. Number of steps per degree:     409.6 for ULN2003                     <-Req'd
+#define AXIS2_STEPS_PER_DEGREE   44444.44 //  12800, n. (200 * 256 * 312.5) / 360 — ALT axis, 312.5:1 worm+belt, 256x       <-Req'd
                                           //         n = (stepper_steps * micro_steps * overall_gear_reduction)/360.0
 #define AXIS2_REVERSE                 OFF  //    OFF, ON Reverses movement direction, or reverse wiring instead to correct.   <-Often
 #define AXIS2_LIMIT_MIN                0 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
-#define AXIS2_LIMIT_MAX                180 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
+#define AXIS2_LIMIT_MAX                 90 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
 
-#define AXIS2_DRIVER_MICROSTEPS       2 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
-#define AXIS2_DRIVER_MICROSTEPS_GOTO  OFF //    OFF, n. Microstep mode used during slews. OFF uses _DRIVER_MICROSTEPS.        Option
-
-#define AXIS2_IN1_PIN           2
-#define AXIS2_IN2_PIN           3
-#define AXIS2_IN3_PIN           4        
-#define AXIS2_IN4_PIN           5   
-#define AXIS2_SERVO_PIN         2     
+#define AXIS2_DRIVER_MICROSTEPS       256 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
+#define AXIS2_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS2_DRIVER_IHOLD            OFF //    OFF, n, (mA.) Current during standstill. OFF uses IRUN/2.0                    Option
-#define AXIS2_DRIVER_IRUN             OFF //    OFF, n, (mA.) Current during tracking, appropriate for stepper/driver/etc.    Option
-#define AXIS2_DRIVER_IGOTO            OFF //    OFF, n, (mA.) Current during slews. OFF uses IRUN.                            Option
+#define AXIS2_DRIVER_IHOLD            150 //    OFF, n, (mA.) Current during standstill. 25% of rated 0.6A.                  Option
+#define AXIS2_DRIVER_IRUN             500 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
+#define AXIS2_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 #define AXIS2_DRIVER_STATUS           OFF //    OFF, ON, HIGH, or LOW.  Polling for driver status info/fault detection.       Option
@@ -143,7 +133,7 @@
 #define LIMIT_HORIZON 				 9.0F
 #define LIMIT_OVERHEAD 				90.0F
 #define AXIS1_HOME_DEFAULT             0
-#define AXIS2_HOME_DEFAULT            10
+#define AXIS2_HOME_DEFAULT            90  // parked at zenith (Alt=90°)
 
 
 
@@ -157,7 +147,7 @@
                                           //         ALTAZM      Altitude/Azimuth Mount, Dobsonians, etc.
                                           //         ALTAZM_UNL  ALTAZM w/unlimited Azimuth motion
 
-#define MOUNT_ALTERNATE_ORIENTATION    ON //    OFF, ON Enables Meridian Flips for FORK mounts and passing through the        Option
+#define MOUNT_ALTERNATE_ORIENTATION   OFF //    OFF, ON Enables Meridian Flips for FORK mounts and passing through the        Option
                                           //         Zenith for ALTAZM mounts.  GEM mode ignores this setting.
 
 #define MOUNT_STARTUP_MODE        SA_AUTO // ..AUTO, SA_STRICT, or SA_PERMISSIVE. Controls when startup trust is granted.     Option
@@ -409,21 +399,7 @@
 #define FEATURE8_VALUE_MEMORY         OFF //    OFF, ON remembers SWITCH, ANALOG_OUT, DEW_HEATER state across power cycles.   Adjust
 #define FEATURE8_ON_STATE            HIGH //   HIGH, LOW to invert so "ON" is 0V and "OFF" is Vcc (3.3V usually.)             Adjust
 
-//display & encoder
-#define LOCAL_DISPLAY                  ON
-#define LOCAL_DISPLAY_DEBUG           OFF
-#define LOCAL_DISPLAY_ENCODER_CLK_PIN  14
-#define LOCAL_DISPLAY_ENCODER_DT_PIN    9
-#define LOCAL_DISPLAY_ENCODER_BTN_PIN   1   // GPIO1: free when PEC_SENSE OFF; avoid GPIO8 (RGB LED)
-
-// Auto-goto after boot: servos slew to this position ~3 s after startup
-// Keeps zenith=90° mechanical invariant intact (HOME_DEFAULT unchanged).
-#define LOCAL_DISPLAY_STARTUP_ALT     10.0  // degrees above horizon
-#define LOCAL_DISPLAY_STARTUP_AZ       0.0  // degrees (0 = North)
-
-// Flash this GPIO for 10 s (5 Hz) when a goto completes.
-// GPIO21 = bottom-right header pin, free in the SERVO_RC setup.
-#define GOTO_LED_PIN                   21
+// No local display in this configuration — control is via Stellarium over USB-CDC.
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------
