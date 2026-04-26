@@ -475,11 +475,6 @@ void Goto::poll() {
   // abort if either axis encounters a limit
   if (stage != GG_ABORT &&
       (stage == GG_READY_ABORT || axis1.motionError(DIR_BOTH) || axis2.motionError(DIR_BOTH))) {
-    bool _ra = (stage == GG_READY_ABORT);
-    bool _a1 = axis1.motionError(DIR_BOTH);
-    bool _a2 = axis2.motionError(DIR_BOTH);
-    VF("MSG: Mount, goto abort cause: ready_abort="); V(_ra); VF(" axis1err="); V(_a1); VF(" axis2err="); VL(_a2);
-    VF("MSG: Mount, goto abort axis1coord="); V(radToDeg(axis1.getInstrumentCoordinate())); VF(" axis2coord="); VL(radToDeg(axis2.getInstrumentCoordinate()));
     VLF("MSG: Mount, goto abort requested");
     stage = GG_ABORT;
     meridianFlipHome.paused = false;
