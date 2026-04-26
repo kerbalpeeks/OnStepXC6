@@ -21,6 +21,10 @@ void Limits::init() {
   nvKey = nv().kv().computeKey("LIMIT_SETTINGS");
   if (!nv().kv().getOrInit(nvKey, settings)) { DLF("WRN: Nv, init failed for LIMIT_SETTINGS"); }
 
+  // Always apply compile-time horizon/overhead from Config.h; NV may hold stale values.
+  settings.altitude.min = degToRadF(LIMIT_HORIZON);
+  settings.altitude.max = degToRadF(LIMIT_OVERHEAD);
+
   settings.altitude.min = constrain(settings.altitude.min, degToRadF(-30), degToRadF(30));
   settings.altitude.max = constrain(settings.altitude.max, degToRadF(60), degToRadF(90));
   settings.pastMeridianE = constrain(settings.pastMeridianE, degToRadF(-360), degToRadF(360));
