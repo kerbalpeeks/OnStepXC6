@@ -21,19 +21,9 @@ void Limits::init() {
   nvKey = nv().kv().computeKey("LIMIT_SETTINGS");
   if (!nv().kv().getOrInit(nvKey, settings)) { DLF("WRN: Nv, init failed for LIMIT_SETTINGS"); }
 
-  // Always apply compile-time altitude limits from Config.h. NV may hold values from a previous
-  // firmware build with different LIMIT_HORIZON/LIMIT_OVERHEAD. Write them back so future boots
-  // don't re-read stale data.
-  float configAltMin = degToRadF(LIMIT_HORIZON);
-  float configAltMax = degToRadF(LIMIT_OVERHEAD);
-  if (settings.altitude.min != configAltMin || settings.altitude.max != configAltMax) {
-    settings.altitude.min = configAltMin;
-    settings.altitude.max = configAltMax;
-    nv().kv().put(nvKey, settings);
-    DF("MSG: Limits, NV altitude limits updated: min="); D(radToDeg(settings.altitude.min)); DF(" max="); DL(radToDeg(settings.altitude.max));
-  } else {
-    DF("MSG: Limits, NV altitude limits ok: min="); D(radToDeg(settings.altitude.min)); DF(" max="); DL(radToDeg(settings.altitude.max));
-  }
+  // Always apply compile-time horizon/overhead from Config.h; NV may hold stale values.
+  settings.altitude.min = degToRadF(LIMIT_HORIZON);
+  settings.altitude.max = degToRadF(LIMIT_OVERHEAD);
 
   settings.altitude.min = constrain(settings.altitude.min, degToRadF(-30), degToRadF(30));
   settings.altitude.max = constrain(settings.altitude.max, degToRadF(60), degToRadF(90));
@@ -497,10 +487,7 @@ void Limits::poll() {
 
   // respond to overhead and horizon limits
   if (transform.mountType == ALTAZM) {
-    if (error.altitude.min) {
-      DF("WRN: Limits, ALTAZM alt.min stop: current.a="); D(radToDeg(current.a)); DF(" limit="); DL(radToDeg(settings.altitude.min));
-      stopAxis2(GA_REVERSE);
-    }
+    if (error.altitude.min) stopAxis2(GA_REVERSE);
     if (error.altitude.max) stopAxis2(GA_FORWARD);
   } else {
     if (!lastError.altitude.min && error.altitude.min) stop();
