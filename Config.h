@@ -74,19 +74,21 @@
 #define AXIS1_LIMIT_MAX              180 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
 
+//#define AXIS1_SLEW_RATE_BASE_DESIRED  5.0
+
 #define AXIS1_DRIVER_MICROSTEPS       256 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
 #define AXIS1_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS1_DRIVER_IHOLD             50 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
-#define AXIS1_DRIVER_IRUN             500 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
-#define AXIS1_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
+#define AXIS1_DRIVER_IHOLD            OFF //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
+#define AXIS1_DRIVER_IRUN             450 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
+#define AXIS1_DRIVER_IGOTO            750 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 #define AXIS1_DRIVER_STATUS           OFF //    OFF, ON, HIGH, or LOW.  For driver status info/fault detection.               Option
 
-#define AXIS1_DRIVER_DECAY            OFF //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
-#define AXIS1_DRIVER_DECAY_GOTO       OFF //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
+#define AXIS1_DRIVER_DECAY            SPREADCYCLE //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
+#define AXIS1_DRIVER_DECAY_GOTO       SPREADCYCLE //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
 
 #define AXIS1_POWER_DOWN              OFF //    OFF, ON Powers off 30sec after movement stops or 10min after last<=1x guide.  Infreq
 
@@ -110,19 +112,21 @@
 #define AXIS2_LIMIT_MAX                 90 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
 
+//#define AXIS2_SLEW_RATE_BASE_DESIRED  5.0
+
 #define AXIS2_DRIVER_MICROSTEPS       256 //    OFF, n. Microstep mode when tracking.                                        <-Req'd
 #define AXIS2_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS2_DRIVER_IHOLD             50 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
-#define AXIS2_DRIVER_IRUN             500 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
-#define AXIS2_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
+#define AXIS2_DRIVER_IHOLD            250 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
+#define AXIS2_DRIVER_IRUN             450 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
+#define AXIS2_DRIVER_IGOTO            750 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 #define AXIS2_DRIVER_STATUS           OFF //    OFF, ON, HIGH, or LOW.  Polling for driver status info/fault detection.       Option
 
-#define AXIS2_DRIVER_DECAY            OFF //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
-#define AXIS2_DRIVER_DECAY_GOTO       OFF //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
+#define AXIS2_DRIVER_DECAY            SPREADCYCLE //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
+#define AXIS2_DRIVER_DECAY_GOTO       SPREADCYCLE //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
 
 #define AXIS2_POWER_DOWN              OFF //    OFF, ON Powers off 30sec after movement stops or 10min after last<=1x guide.  Option
 
@@ -218,7 +222,7 @@
 #define TRACK_COMPENSATION_MEMORY     OFF //    OFF, ON Remembers refraction/pointing model compensated tracking settings.    Option
 
 // SLEWING BEHAVIOUR ------------------------------------------ see https://onstep.groups.io/g/main/wiki/Configuration_Mount#SLEWING
-#define SLEW_RATE_BASE_DESIRED        1.0 //    1.0, n. Desired slew rate in deg/sec. Adjustable at run-time from            <-Req'd
+#define SLEW_RATE_BASE_DESIRED        10.0 //    1.0, n. Desired slew rate in deg/sec. Adjustable at run-time from            <-Req'd
                                           //         1/2 to 2x this rate, and as performace considerations require.
 #define SLEW_RATE_MEMORY              OFF //    OFF, ON Remembers rates set across power cycles.                              Option
 #define SLEW_ACCELERATION_DIST        5.0 //    5.0, n, (degrees.) Approx. distance for acceleration (and deceleration.)      Adjust
