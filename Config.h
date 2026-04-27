@@ -132,7 +132,7 @@
 
 
 // HOME DEFAULTS (TEST)
-#define LIMIT_HORIZON 				 0.0F
+#define LIMIT_HORIZON 				-5.0F
 #define LIMIT_OVERHEAD 				90.0F
 #define AXIS1_HOME_DEFAULT             0
 #define AXIS2_HOME_DEFAULT            0  // horizon (Alt=0°, physical starting position)
