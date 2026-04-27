@@ -78,7 +78,7 @@
 #define AXIS1_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS1_DRIVER_IHOLD            150 //    OFF, n, (mA.) Current during standstill. 25% of rated 0.6A.                  Option
+#define AXIS1_DRIVER_IHOLD             50 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
 #define AXIS1_DRIVER_IRUN             500 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
 #define AXIS1_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
@@ -114,7 +114,7 @@
 #define AXIS2_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS2_DRIVER_IHOLD            150 //    OFF, n, (mA.) Current during standstill. 25% of rated 0.6A.                  Option
+#define AXIS2_DRIVER_IHOLD             50 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
 #define AXIS2_DRIVER_IRUN             500 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
 #define AXIS2_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
