@@ -80,15 +80,15 @@
 #define AXIS1_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS1_DRIVER_IHOLD            OFF //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
-#define AXIS1_DRIVER_IRUN             450 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
-#define AXIS1_DRIVER_IGOTO            750 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
+#define AXIS1_DRIVER_IHOLD            150 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
+#define AXIS1_DRIVER_IRUN             540 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
+#define AXIS1_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 #define AXIS1_DRIVER_STATUS           OFF //    OFF, ON, HIGH, or LOW.  For driver status info/fault detection.               Option
 
-#define AXIS1_DRIVER_DECAY            SPREADCYCLE //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
-#define AXIS1_DRIVER_DECAY_GOTO       SPREADCYCLE //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
+#define AXIS1_DRIVER_DECAY            STEALTHCHOP //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
+#define AXIS1_DRIVER_DECAY_GOTO       STEALTHCHOP //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
 
 #define AXIS1_POWER_DOWN              OFF //    OFF, ON Powers off 30sec after movement stops or 10min after last<=1x guide.  Infreq
 
@@ -118,15 +118,15 @@
 #define AXIS2_DRIVER_MICROSTEPS_GOTO  16  //    OFF, n. Microstep mode used during slews — switches via UART for faster goto. Option
 
 // for TMC2130, TMC5160, TMC2209, TMC2226 STEP/DIR driver models:
-#define AXIS2_DRIVER_IHOLD            250 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
-#define AXIS2_DRIVER_IRUN             450 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
-#define AXIS2_DRIVER_IGOTO            750 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
+#define AXIS2_DRIVER_IHOLD            0 //    OFF, n, (mA.) Current during standstill. ~8% of rated 0.6A — reduces StealthChop standstill hiss. Option
+#define AXIS2_DRIVER_IRUN             540 //    OFF, n, (mA.) Current during tracking.  ~83% of rated 0.6A.                  Option
+#define AXIS2_DRIVER_IGOTO            600 //    OFF, n, (mA.) Current during slews. At rated 0.6A during goto.               Option
 // /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /
 
 #define AXIS2_DRIVER_STATUS           OFF //    OFF, ON, HIGH, or LOW.  Polling for driver status info/fault detection.       Option
 
-#define AXIS2_DRIVER_DECAY            SPREADCYCLE //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
-#define AXIS2_DRIVER_DECAY_GOTO       SPREADCYCLE //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
+#define AXIS2_DRIVER_DECAY            STEALTHCHOP //    OFF, Tracking decay mode default override. TMC default is STEALTHCHOP.        Infreq
+#define AXIS2_DRIVER_DECAY_GOTO       STEALTHCHOP //    OFF, Decay mode goto default override. TMC default is SPREADCYCLE.            Infreq
 
 #define AXIS2_POWER_DOWN              OFF //    OFF, ON Powers off 30sec after movement stops or 10min after last<=1x guide.  Option
 
@@ -170,9 +170,9 @@
 #define MOUNT_ENABLE_IN_STANDBY       OFF //    OFF, ON Enables mount motor drivers while in standby.                         Infreq
 
 // TIME AND LOCATION ---------------------------------------------- see https://onstep.groups.io/g/main/wiki/Configuration_Mount#TLS
-#define TIME_LOCATION_SOURCE       OFF //    OFF, DS3231 (I2C,) SD3031 (I2C,) TEENSY (T3.2 etc,) GPS, or NTP source.       Option
+#define TIME_LOCATION_SOURCE       DS3231 //    OFF, DS3231 (I2C,) SD3031 (I2C,) TEENSY (T3.2 etc,) GPS, or NTP source.       Option
                                           //         Provides Date/Time, and if available, PPS & Lat/Long also.
-#define TIME_LOCATION_PPS_SENSE       OFF //    OFF, HIGH senses PPS (pulse per second,) signal rising edge, or use LOW for   Option
+#define TIME_LOCATION_PPS_SENSE      HIGH //    OFF, HIGH senses PPS (pulse per second,) signal rising edge, or use LOW for   Option
                                           //         falling edge, or use BOTH for rising and falling edges.
 
 // STATUS ------------------------------------------------------ see https://onstep.groups.io/g/main/wiki/Configuration_Mount#STATUS
