@@ -73,6 +73,8 @@
 #define AXIS1_LIMIT_MIN             -180 //   -180, n. Where n= -90..-360 (degrees.) Minimum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_MAX              180 //    180, n. Where n=  90.. 360 (degrees.) Maximum "Hour Angle" or Azimuth.        Adjust
 #define AXIS1_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
+#define AXIS1_TARGET_TOLERANCE       60.0 //    0.0, n. (arc-seconds) Goto stops when AZ is within this of target.            Adjust
+                                          //         Prevents 15s timeout when near-polar targets have a fast-moving AZ coord.
 
 //#define AXIS1_SLEW_RATE_BASE_DESIRED  5.0
 
@@ -111,6 +113,7 @@
 #define AXIS2_LIMIT_MIN                0 //    -90, n. Where n=-90..0 (degrees.) Minimum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_MAX                 90 //     90, n. Where n= 0..90 (degrees.) Maximum allowed Declination or Altitude.    Infreq
 #define AXIS2_LIMIT_SYNC              OFF //    OFF, n. Where n= 0..90 (degrees.) Allow sync/reset only within this +/-range. Option
+#define AXIS2_TARGET_TOLERANCE       30.0 //    0.0, n. (arc-seconds) Goto stops when ALT is within this of target.           Adjust
 
 //#define AXIS2_SLEW_RATE_BASE_DESIRED  5.0
 
@@ -225,8 +228,8 @@
 #define SLEW_RATE_BASE_DESIRED        10.0 //    1.0, n. Desired slew rate in deg/sec. Adjustable at run-time from            <-Req'd
                                           //         1/2 to 2x this rate, and as performace considerations require.
 #define SLEW_RATE_MEMORY              OFF //    OFF, ON Remembers rates set across power cycles.                              Option
-#define SLEW_ACCELERATION_DIST        5.0 //    5.0, n, (degrees.) Approx. distance for acceleration (and deceleration.)      Adjust
-#define SLEW_RAPID_STOP_DIST          2.0 //    2.0, n, (degrees.) Approx. distance required to stop when a slew              Adjust
+#define SLEW_ACCELERATION_DIST        1.0 //    5.0, n, (degrees.) Approx. distance for acceleration (and deceleration.)      Adjust
+#define SLEW_RAPID_STOP_DIST          0.5 //    2.0, n, (degrees.) Approx. distance required to stop when a slew              Adjust
                                           //         is aborted or a limit is exceeded.
 #define GOTO_FEATURE                   ON //     ON, Use OFF to disable mount Goto features.                                  Infreq
 #define GOTO_OFFSET                  0.25 //   0.25, Offset in deg's for goto target unidirectional approach, 0.0 disables    Adjust
