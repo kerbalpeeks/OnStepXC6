@@ -682,8 +682,30 @@ CommandError Goto::startAutoSlew() {
 
   VF("MSG: Mount, goto target coordinates set (a1="); V(radToDeg(a1)); VF(" deg, a2="); V(radToDeg(a2)); VLF(" deg)");
 
-  e = axis1.autoGoto(radsPerSecondCurrent);
-  if (e == CE_NONE) e = axis2.autoGoto(radsPerSecondCurrent*((float)(AXIS2_SLEW_RATE_PERCENT)/100.0F));
+  float rate1 = radsPerSecondCurrent;
+  float rate2 = radsPerSecondCurrent*((float)(AXIS2_SLEW_RATE_PERCENT)/100.0F);
+
+  // For ALTAZM: synchronize rates so both axes finish at the same time.
+  // AZ (axis1) often has a much lower gear ratio than ALT (axis2), so it finishes
+  // far earlier than axis2, causing an apparent "sudden stop" mid-goto.
+  #if MOUNT_TYPE == ALTAZM || MOUNT_TYPE == ALTAZM_UNL
+  {
+    float d1 = (float)fabs(axis1.getTargetDistance());
+    float d2 = (float)fabs(axis2.getTargetDistance());
+    if (rate1 > 0 && rate2 > 0 && d1 > degToRadF(0.5F) && d2 > degToRadF(0.5F)) {
+      float t1 = d1 / rate1;
+      float t2 = d2 / rate2;
+      if (t1 < t2) {
+        rate1 = d1 / t2;    // axis1 finishes first — slow it down
+      } else {
+        rate2 = d2 / t1;    // axis2 finishes first — slow it down
+      }
+    }
+  }
+  #endif
+
+  e = axis1.autoGoto(rate1);
+  if (e == CE_NONE) e = axis2.autoGoto(rate2);
 
   nearTargetTimeout = millis();
 
